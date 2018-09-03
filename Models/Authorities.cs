@@ -9,11 +9,10 @@ namespace Models
     public class authorities
     {
         public long id { get; set; }
-        public long zoneid { get; set; }
         public string zone { get; set; }
         public string host { get; set; }
-        public string type { get; set; }
         public string data { get; set; }
+        public string type { get; set; }
         public int ttl { get; set; }
         public string mbox { get; set; }
         public int serial { get; set; }
@@ -21,7 +20,7 @@ namespace Models
         public int retry { get; set; }
         public int expire { get; set; }
         public int minimum { get; set; }
-        public long recordid { get; set; }
+        public long userid { get; set; }
     }
     public class AuthoritiesSimple
     {

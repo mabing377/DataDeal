@@ -65,7 +65,7 @@ namespace TestOnline
                 System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
                 watch.Start();//开始计时  
 
-                DataSet ds = MySQLHelper.Query("SELECT z.id,z.zone,z.userid,CASE when d.maxfensheng<1 then 0 else 1 end as `level`,z.nsstate from zones as z left join domainlevel as d on z.DomainLevel=d.levelvalue where z.id>3035157 and z.NSState=1 and z.State=0");
+                DataSet ds = MySQLHelper.Query("SELECT z.id,z.zone,z.userid,CASE when d.maxfensheng<1 then 0 else 1 end as `level`,z.nsstate from zones as z left join domainlevel as d on z.DomainLevel=d.levelvalue ");//where z.id>3035157 and z.NSState=1 and z.State=0
 
                 long q = watch.ElapsedMilliseconds;
                 DataTable dt = ds.Tables[0];
@@ -275,7 +275,6 @@ namespace TestOnline
                 }
                 else
                 {
-
                     d.ttl = int.Parse(drl[i][4].ToString());
                     d.userid = Convert.ToInt32(drl[i][11]);
                     dl.Add(d);

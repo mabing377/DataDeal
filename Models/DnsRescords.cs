@@ -44,12 +44,5 @@ namespace Models
         public string data { get; set; }
         public int ttl { get; set; }
         public string view { get; set; }
-        public string active { get; set; }
-        public int domainlevel { get; set; }
-        public string standby { get; set; }
-        public long checkhostid { get; set; }
-        public long isfensheng { get; set; }
-        public long urlid { get; set; }
-        public string str16 { get; set; }
     }
 }
