@@ -45,4 +45,5 @@ namespace Models
         public int ttl { get; set; }
         public string view { get; set; }
     }
+    
 }

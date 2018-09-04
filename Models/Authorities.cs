@@ -33,4 +33,5 @@ namespace Models
         public int ttl { get; set; } = 60;
         public string view { get; set; } = "Def";
     }
+
 }

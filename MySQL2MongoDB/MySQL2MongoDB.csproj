@@ -92,7 +92,6 @@
     <Compile Include="CommandInfo.cs" />
     <Compile Include="JsonHelper.cs" />
     <Compile Include="MongoHelper.cs" />
-    <Compile Include="MongoHelper\MongoHelper2.cs" />
     <Compile Include="MongoServer.cs" />
     <Compile Include="MySQLHelper.cs" />
     <Compile Include="Program.cs" />
@@ -109,14 +108,6 @@
     <ProjectReference Include="..\DNS\DNS.csproj">
       <Project>{ebcb8f53-c56a-4245-893f-ce67d69d0087}</Project>
       <Name>DNS</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MongoDB.GridFS\MongoDB.GridFS.csproj">
-      <Project>{b42dbbf9-0a1f-4749-9787-013bf8d8f435}</Project>
-      <Name>MongoDB.GridFS</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MongoDB\MongoDB.csproj">
-      <Project>{b125bba6-bffd-44fa-9254-9b1754cd8af3}</Project>
-      <Name>MongoDB</Name>
     </ProjectReference>
     <ProjectReference Include="..\Utility\Utility.csproj">
       <Project>{156f5287-2f78-4750-8b48-66fef6e73941}</Project>

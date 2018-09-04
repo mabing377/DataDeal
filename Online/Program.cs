@@ -1,9 +1,11 @@
 ﻿using BindDns.MongoDBEntity;
 using Models;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Utility;
 
@@ -18,7 +20,7 @@ namespace Online
             Console.WriteLine("1-zones;");
             Console.WriteLine("2-authorities");
             Console.WriteLine("3-dnsrecords");
-            //Console.WriteLine("4-deletePTR");
+            Console.WriteLine("4-checkSOA");
             //Console.WriteLine("5-delete no SOA or NS");
             //Console.WriteLine("6-MongoDBTest");
             //Console.WriteLine("7-User Data Transfer");
@@ -38,9 +40,9 @@ namespace Online
                 case 51:
                     MongoInsertFromDnsrecords();
                     break;
-                //case 52:
-                //    DeletePRT();
-                //    break;
+                case 52:
+                    CheckSOACount();
+                    break;
                 //case 53:
                 //    DeleteNoSOA();
                 //    break;
@@ -62,7 +64,7 @@ namespace Online
         {
             try
             {
-                List<TempZoneID> temp1 = DtToList<TempZoneID>.ConvertToModel( MySQLHelper.Query("select id as zoneid from Temp where type=1").Tables[0]);
+                List<TempZoneID> temp1 = DtToList<TempZoneID>.ConvertToModel(MySQLHelper.Query("select id as zoneid from Temp where type=1").Tables[0]);
                 DataTable dtid = MySQLHelper.Query("select min(id),max(id) from zones").Tables[0];
                 long min = Convert.ToInt32(dtid.Rows[0][0]);
                 long max = Convert.ToInt32(dtid.Rows[0][1]);
@@ -72,7 +74,7 @@ namespace Online
                 long index = min;
                 do
                 {
-                    DataTable dt = MySQLHelper.Query("SELECT z.id,z.zone,z.userid,CASE when d.maxfensheng<1 then 0 else 1 end as level,z.nsstate from zones as z left join domainlevel as d on z.DomainLevel=d.levelvalue where z.id between " + index + " and " + (index + 20000)+ " and z.Active='Y' and z.ForceStop='N'").Tables[0];
+                    DataTable dt = MySQLHelper.Query("SELECT z.id,z.zone,z.userid,CASE when d.maxfensheng<1 then 0 else 1 end as level,z.nsstate from zones as z left join domainlevel as d on z.DomainLevel=d.levelvalue where z.userid<>348672 and z.nsstate=1 and z.id between " + index + " and " + (index + 20000) + " and z.Active='Y' and z.ForceStop='N'").Tables[0];
                     Console.WriteLine("GetDataTabel from mysql         Use Time={0};", watch.ElapsedMilliseconds);
 
                     List<zones> zonesList = DtToList<zones>.ConvertToModel(dt);
@@ -81,11 +83,11 @@ namespace Online
                     List<ZonesSimple> dl = new List<ZonesSimple>();
                     foreach (zones z in zonesList)
                     {
-                        if (temp1.FindAll(tz => tz.zoneid == z.id).Count==0)
+                        if (temp1.FindAll(tz => tz.zoneid == z.id).Count == 0)
                             dl.Add(Row2ZoneSimple(z));
                     }
                     Console.WriteLine("Data Filter;                    Use time={0};", watch.ElapsedMilliseconds);
-                   
+
                     var client = DriverConfiguration.Client;
                     var db = client.GetDatabase(DriverConfiguration.DatabaseNamespace.DatabaseName);
                     IMongoCollection<ZonesSimple> categories = db.GetCollection<ZonesSimple>("zones");
@@ -93,9 +95,9 @@ namespace Online
                         categories.InsertMany(dl);
                     dl.Clear();
                     Console.WriteLine("MongoDB Inserted;               Use time={0};", watch.ElapsedMilliseconds);
-                   
-                    index =index+20001;
-                    Console.WriteLine("min={0};max={1};index={2};use time={3}",min,max,index, watch.ElapsedMilliseconds);
+
+                    index = index + 20001;
+                    Console.WriteLine("min={0};max={1};index={2};use time={3}", min, max, index, watch.ElapsedMilliseconds);
                     Console.WriteLine("==============================================");
                 } while (index < max);
                 Console.WriteLine("End min={0};max={1};index={2};use time {3}", min, max, index, watch.ElapsedMilliseconds);
@@ -103,7 +105,7 @@ namespace Online
             }
             catch (Exception ex)
             {
-                string re = ex.ToString();
+                Console.WriteLine(ex.Message);
             }
         }
         static ZonesSimple Row2ZoneSimple(zones tz)
@@ -134,7 +136,7 @@ namespace Online
                 long index = min;
                 do
                 {
-                    DataTable dt = MySQLHelper.Query("select a.id,a.zone,host,data,type,ttl,mbox,serial,refresh,retry,expire,minimum ,t.userid from authorities as a left join zones as t on a.ZoneID=t.id where a.ZoneID BETWEEN " + index + " and " + (index + 20000)+ " and t.id is not NULL and t.Active='Y' and t.ForceStop='N'  order by a.zone,a.type").Tables[0];
+                    DataTable dt = MySQLHelper.Query("select a.id,a.zone,host,data,type,ttl,mbox,serial,refresh,retry,expire,minimum ,t.userid from authorities as a left join zones as t on a.ZoneID=t.id where a.ZoneID BETWEEN " + index + " and " + (index + 20000) + " and t.userid<>348672  and t.id is not NULL and t.nsstate=1 and t.Active='Y' and t.ForceStop='N'  order by a.zone,a.type").Tables[0];
                     Console.WriteLine("getdatatabel from mysql             use time={0};", watch.ElapsedMilliseconds);
                     List<authorities> aList = DtToList<authorities>.ConvertToModel(dt);
                     Console.WriteLine("datatable convert to modellist;     use time={0};", watch.ElapsedMilliseconds);
@@ -162,7 +164,7 @@ namespace Online
                         domain = "";
                         idx++;
                     }
-                    Console.WriteLine("modellist convert;index={1};use time={0};", watch.ElapsedMilliseconds,index);
+                    Console.WriteLine("modellist convert;index={1};use time={0};", watch.ElapsedMilliseconds, index);
                     try
                     {
                         var client = DriverConfiguration.Client;
@@ -173,10 +175,11 @@ namespace Online
                             if (ala[i].Count > 0)
                                 collection.InsertMany(ala[i]);
                         }
-                        Console.WriteLine("mongodb inserted;index={1};use time={0};", watch.ElapsedMilliseconds,index);
+                        Console.WriteLine("mongodb inserted;index={1};use time={0};", watch.ElapsedMilliseconds, index);
                     }
-                    catch (Exception ex) {
-                        string r = ex.ToString();
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("Insert Data"+ex.Message);
                     }
 
                     index = index + 20001;
@@ -188,7 +191,7 @@ namespace Online
             }
             catch (Exception ex)
             {
-                string re = ex.ToString();
+                Console.WriteLine(ex.Message);
             }
         }
         static List<AuthoritiesSimple> Row2Authorities(List<authorities> drl)
@@ -227,13 +230,13 @@ namespace Online
                 long index = min;
                 do
                 {
-                    DataTable dt = MySQLHelper.Query("select d.id,d.zoneid,d.zone,d.host,d.type,d.data,d.ttl,d.view,d.mx_priority,d.userid from dnsrecords as d left join zones as t on d.ZoneID=t.id where d.Active='Y' and d.ZoneID BETWEEN " + index + " and " + (index + 20000) + " and t.id is not NULL  and t.Active='Y' and t.ForceStop='N' order by d.zone").Tables[0];
+                    DataTable dt = MySQLHelper.Query("select d.id,d.zoneid,d.zone,d.host,d.type,d.data,d.ttl,d.view,d.mx_priority,d.userid from dnsrecords as d left join zones as t on d.ZoneID=t.id where d.Active='Y' and d.type<>'PTR' and d.ZoneID BETWEEN " + index + " and " + (index + 20000) + " and t.userid<>348672 and t.id is not NULL  and t.nsstate=1 and t.Active='Y' and t.ForceStop='N' order by d.zone").Tables[0];
                     Console.WriteLine("GetDataTabel from mysql         Use Time={0};", watch.ElapsedMilliseconds);
                     List<dnsrecords> rList = DtToList<dnsrecords>.ConvertToModel(dt);
                     Console.WriteLine("DataTable Convert to ModelList; Use time={0};", watch.ElapsedMilliseconds);
                     List<dnsrecords> unList = new List<dnsrecords>();
                     List<DnsRescordsSimple>[] dla = new List<DnsRescordsSimple>[16] { new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>() };
-                    
+
                     foreach (dnsrecords dr in rList)
                     {
                         if (CheckRecordHost(dr.host, dr.type) && CheckRecordData(dr.data, dr.type, dr.view, dr.host))
@@ -252,7 +255,7 @@ namespace Online
 
                     var client = DriverConfiguration.Client;
                     var db = client.GetDatabase(DriverConfiguration.DatabaseNamespace.DatabaseName);
-                    
+
                     for (int i = 0; i < 16; i++)
                     {
                         IMongoCollection<DnsRescordsSimple> collection = db.GetCollection<DnsRescordsSimple>(i.ToString("x"));
@@ -276,7 +279,7 @@ namespace Online
             }
             catch (Exception ex)
             {
-                string re = ex.ToString();
+                Console.WriteLine(ex.Message);
             }
         }
         static DnsRescordsSimple Row2DnsRecords(dnsrecords dr)
@@ -356,7 +359,9 @@ namespace Online
                     if (Host.Contains("*") && (!Host.StartsWith("*") || Regex.Matches(Host, @"\*").Count > 1))
                         return false;
                 }
-                string[] tempArr = Host.Split(new char[] { '.' });
+
+                if (Host.Contains("@") && Host != "@")
+                    return false;
 
                 if (!Regex.IsMatch(Host, CheckHost, RegexOptions.IgnoreCase))
                     return false;
@@ -420,5 +425,53 @@ namespace Online
         }
         #endregion
         #endregion
+
+
+        #region CheckAuthoritiesSOA
+        static void CheckSOACount() {
+
+            string[] collectionNames = new string[] { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f" };
+            try
+            {
+                System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
+                watch.Start();//开始计时  
+                List<Auth> al = new List<Auth>();
+                foreach (string c in collectionNames)
+                {
+
+                    var client = DriverConfiguration.Client;
+                    var db = client.GetDatabase(DriverConfiguration.DatabaseNamespace.DatabaseName);
+                    
+                    IMongoCollection<Auth> collection = db.GetCollection<Auth>(c);
+                    var builder = Builders<Auth>.Filter;
+                    al = collection.Find(builder.And(builder.Eq("type", "SOA"))).ToList<Auth>();
+
+                    var groupList = al.GroupBy(x => new { x.domain })
+                    .Select(group => new
+                    {
+                        Keys = group.Key,
+                        Count=group.Count()
+                    }).ToList();
+                    var r = from g in groupList where g.Count>1 select g;
+                    Console.WriteLine(c +" Collection "+r.Count());
+                    if(r.Count()>0)
+                        foreach (var rc in r)
+                        {
+                            Console.WriteLine(rc.Keys.domain+" This Domain Wrong");
+                        }
+                }
+                watch.Stop();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            Console.WriteLine("Mission Over");
+        }
+        #endregion
+    }
+    public sealed class Auth : AuthoritiesSimple
+    {
+        public ObjectId _id { get; set; }
     }
 }
