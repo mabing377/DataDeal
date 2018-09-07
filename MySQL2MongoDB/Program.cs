@@ -51,9 +51,9 @@ namespace MySQL2MongoDB
             Console.ReadKey();
         }
         static void CheckIPV4() {
-            string CheckIPV4 = @"^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$";
+            string CheckIPV4 = @"^(\d{1}|[1-9]\d{1}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1}|[1-9]\d{1}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1}|[1-9]\d{1}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1}|[1-9]\d{1}|1\d\d|2[0-4]\d|25[0-5])$";
             string input = Console.ReadLine();
-            Console.WriteLine(!Regex.IsMatch(input, CheckIPV4, RegexOptions.IgnoreCase));
+            Console.WriteLine(Regex.IsMatch(input, CheckIPV4));
         }
 
 

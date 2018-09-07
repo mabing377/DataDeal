@@ -1,11 +1,5 @@
-﻿using MongoDB;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System;
 using System.Threading;
-using System.Threading.Tasks;
-using Utility;
 
 namespace SN__
 {
@@ -23,10 +17,10 @@ namespace SN__
             
         }
         public static void SNAdd() {
-            List<zoneslevel> zll= MongoHelper.GetAll<zoneslevel>("zoneslevel");
-            foreach (zoneslevel zl in zll) {
-                MongoHelper.UpdateWithColumn<zoneslevel>("zoneslevel", new Document("$set", new Document("sn", zl.sn + 1)), new Document("level", zl.level));
-            }
+            //List<zoneslevel> zll= MongoHelper.GetAll<zoneslevel>("zoneslevel");
+            //foreach (zoneslevel zl in zll) {
+            //    MongoHelper.UpdateWithColumn<zoneslevel>("zoneslevel", new Document("$set", new Document("sn", zl.sn + 1)), new Document("level", zl.level));
+            //}
             //MongoHelper.UpdateAll<zoneslevel>("zoneslevel",new Document("$inc",new Document("sn",1)));
         }
     }

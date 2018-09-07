@@ -38,6 +38,15 @@
     <Reference Include="Google.Protobuf, Version=3.5.1.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604, processorArchitecture=MSIL">
       <HintPath>..\packages\Google.Protobuf.3.5.1\lib\net45\Google.Protobuf.dll</HintPath>
     </Reference>
+    <Reference Include="MongoDB.Bson, Version=2.7.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MongoDB.Bson.2.7.0\lib\net45\MongoDB.Bson.dll</HintPath>
+    </Reference>
+    <Reference Include="MongoDB.Driver, Version=2.7.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MongoDB.Driver.2.7.0\lib\net45\MongoDB.Driver.dll</HintPath>
+    </Reference>
+    <Reference Include="MongoDB.Driver.Core, Version=2.7.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MongoDB.Driver.Core.2.7.0\lib\net45\MongoDB.Driver.Core.dll</HintPath>
+    </Reference>
     <Reference Include="MySql.Data, Version=8.0.12.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
       <HintPath>..\packages\MySql.Data.8.0.12\lib\net452\MySql.Data.dll</HintPath>
     </Reference>
@@ -79,6 +88,10 @@
     <ProjectReference Include="..\Models\Models.csproj">
       <Project>{cecc783e-ff14-46ec-8fa5-7e2e4901be79}</Project>
       <Name>Models</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MongoDBHelper\MongoDBHelper.csproj">
+      <Project>{B14C6C51-3539-42BB-868C-F1AB8884DE3D}</Project>
+      <Name>MongoDBHelper</Name>
     </ProjectReference>
     <ProjectReference Include="..\MongoDB\MongoDB.csproj">
       <Project>{b125bba6-bffd-44fa-9254-9b1754cd8af3}</Project>

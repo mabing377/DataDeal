@@ -1,11 +1,9 @@
-﻿using MongoDB;
+﻿using BindDns.MongoDBEntity;
+using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Net;
 using System.Text;
-using System.Threading.Tasks;
 using Utility;
 
 namespace ViewIP
@@ -32,7 +30,9 @@ namespace ViewIP
                     string content;
                     string view = "";
                     StreamReader sr = new StreamReader(file, Encoding.Default);
-                    List<Document> dl = new List<Document>();
+                    List<ViewIP> dl = new List<ViewIP>();
+                    var client = DriverConfiguration.Client;
+                    var db = client.GetDatabase(DriverConfiguration.DatabaseNamespace.DatabaseName);
                     while ((content = sr.ReadLine()) != null)
                     {
                         if (content.Contains("{"))
@@ -51,17 +51,31 @@ namespace ViewIP
                             long maxIp = IpToInt(eip);
                             if (level == 1 && view == "TelDef")
                             {
-                                long dcount = MongoHelper.GetCount<Document>("zonesip", new Document("start", minIp).Add("end", maxIp).Add("view", view));
-                                if (dcount == 0)
-                                    dl.Add(new Document("start", minIp).Add("end", maxIp).Add("view", view).Add("level", 0));
+                                var builder = Builders<ViewIP>.Filter;
+                                long dcount = db.GetCollection<ViewIP>("levelIp").Find(builder.And(builder.Eq("start", minIp), builder.Eq("end", maxIp), builder.Eq("view", view))).ToList<ViewIP>().Count;// MongoHelper.GetCount<ViewIP>("zonesip", new Document("start", minIp).Add("end", maxIp).Add("view", view));
+                                if (dcount == 0) {
+                                    ViewIP v = new ViewIP();
+                                    v.start = minIp;
+                                    v.end = maxIp;
+                                    v.view = view;
+                                    v.level = 0;
+                                    dl.Add(v);
+                                }
                             }
                             else
-                                dl.Add(new Document("start", minIp).Add("end", maxIp).Add("view", view).Add("level", level));                          
+                            {
+                                ViewIP v = new ViewIP();
+                                v.start = minIp;
+                                v.end = maxIp;
+                                v.view = view;
+                                v.level = level;
+                                dl.Add(v);
+                            }
                         }
                     }
                     if (dl.Count > 0)
                     {
-                        MongoHelper.InsertAll<Document>("zonesip", dl);
+                        db.GetCollection<ViewIP>("levelIp").InsertMany(dl);
                         Console.WriteLine(view + " Handled Complete");
                         count++;
                     }
@@ -270,7 +284,6 @@ namespace ViewIP
                 string content;
                 string view = "";
                 StreamReader sr = new StreamReader(file, Encoding.Default);
-                List<Document> dl = new List<Document>();
                 while ((content = sr.ReadLine()) != null)
                 {
                     if (content.Contains("{"))
@@ -285,10 +298,11 @@ namespace ViewIP
         }
         
     }
-    //internal class ViewIP {
-    //    public int start { get; set; }
-    //    public int end { get; set; }
-    //    public string view { get; set; }
-    //    public int level { get; set; }
-    //}
+    internal class ViewIP
+    {
+        public long start { get; set; }
+        public long end { get; set; }
+        public string view { get; set; }
+        public int level { get; set; }
+    }
 }

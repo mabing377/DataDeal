@@ -64,7 +64,7 @@ namespace Online
         {
             try
             {
-                List<TempZoneID> temp1 = DtToList<TempZoneID>.ConvertToModel(MySQLHelper.Query("select id as zoneid from Temp where type=1").Tables[0]);
+                List<TempZoneID> temp1 = DtToList<TempZoneID>.ConvertToModel(MySQLHelper.Query("select id as zoneid from Temp where type in (1,4)").Tables[0]);
                 DataTable dtid = MySQLHelper.Query("select min(id),max(id) from zones").Tables[0];
                 long min = Convert.ToInt32(dtid.Rows[0][0]);
                 long max = Convert.ToInt32(dtid.Rows[0][1]);
@@ -74,7 +74,7 @@ namespace Online
                 long index = min;
                 do
                 {
-                    DataTable dt = MySQLHelper.Query("SELECT z.id,z.zone,z.userid,CASE when d.maxfensheng<1 then 0 else 1 end as level,z.nsstate from zones as z left join domainlevel as d on z.DomainLevel=d.levelvalue where z.userid<>348672 and z.nsstate=1 and z.id between " + index + " and " + (index + 20000) + " and z.Active='Y' and z.ForceStop='N'").Tables[0];
+                    DataTable dt = MySQLHelper.Query("SELECT z.id,z.zone,z.userid,CASE when d.maxfensheng<1 then 0 else 1 end as level,z.nsstate from zones as z left join domainlevel as d on z.DomainLevel=d.levelvalue where z.userid<>348672 and z.id between " + index + " and " + (index + 20000) + " and z.Active='Y' and z.ForceStop='N'").Tables[0];
                     Console.WriteLine("GetDataTabel from mysql         Use Time={0};", watch.ElapsedMilliseconds);
 
                     List<zones> zonesList = DtToList<zones>.ConvertToModel(dt);
@@ -136,7 +136,7 @@ namespace Online
                 long index = min;
                 do
                 {
-                    DataTable dt = MySQLHelper.Query("select a.id,a.zone,host,data,type,ttl,mbox,serial,refresh,retry,expire,minimum ,t.userid from authorities as a left join zones as t on a.ZoneID=t.id where a.ZoneID BETWEEN " + index + " and " + (index + 20000) + " and t.userid<>348672  and t.id is not NULL and t.nsstate=1 and t.Active='Y' and t.ForceStop='N'  order by a.zone,a.type").Tables[0];
+                    DataTable dt = MySQLHelper.Query("select a.id,a.zone,host,data,type,ttl,mbox,serial,refresh,retry,expire,minimum ,t.userid from authorities as a left join zones as t on a.ZoneID=t.id where a.ZoneID BETWEEN " + index + " and " + (index + 20000) + " and t.userid<>348672  and t.id is not NULL and t.Active='Y' and t.ForceStop='N'  order by a.zone,a.type").Tables[0];
                     Console.WriteLine("getdatatabel from mysql             use time={0};", watch.ElapsedMilliseconds);
                     List<authorities> aList = DtToList<authorities>.ConvertToModel(dt);
                     Console.WriteLine("datatable convert to modellist;     use time={0};", watch.ElapsedMilliseconds);
@@ -230,18 +230,18 @@ namespace Online
                 long index = min;
                 do
                 {
-                    DataTable dt = MySQLHelper.Query("select d.id,d.zoneid,d.zone,d.host,d.type,d.data,d.ttl,d.view,d.mx_priority,d.userid from dnsrecords as d left join zones as t on d.ZoneID=t.id where d.Active='Y' and d.type<>'PTR' and d.ZoneID BETWEEN " + index + " and " + (index + 20000) + " and t.userid<>348672 and t.id is not NULL  and t.nsstate=1 and t.Active='Y' and t.ForceStop='N' order by d.zone").Tables[0];
+                    DataTable dt = MySQLHelper.Query("select d.id,d.zoneid,d.zone,d.host,d.type,d.data,d.ttl,d.view,d.mx_priority,d.userid from dnsrecords as d left join zones as t on d.ZoneID=t.id where d.Active='Y' and d.type<>'PTR' and d.ZoneID BETWEEN " + index + " and " + (index + 20000) + " and t.userid<>348672 and t.id is not NULL and t.Active='Y' and t.ForceStop='N' order by d.zone").Tables[0];
                     Console.WriteLine("GetDataTabel from mysql         Use Time={0};", watch.ElapsedMilliseconds);
                     List<dnsrecords> rList = DtToList<dnsrecords>.ConvertToModel(dt);
                     Console.WriteLine("DataTable Convert to ModelList; Use time={0};", watch.ElapsedMilliseconds);
                     List<dnsrecords> unList = new List<dnsrecords>();
-                    List<DnsRescordsSimple>[] dla = new List<DnsRescordsSimple>[16] { new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>() };
+                    List<DnsRecordsSimple>[] dla = new List<DnsRecordsSimple>[16] { new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>() };
 
                     foreach (dnsrecords dr in rList)
                     {
                         if (CheckRecordHost(dr.host, dr.type) && CheckRecordData(dr.data, dr.type, dr.view, dr.host))
                         {
-                            DnsRescordsSimple d = Row2DnsRecords(dr);
+                            DnsRecordsSimple d = Row2DnsRecords(dr);
                             string collectionname = StringHelper.CalculateMD5Hash(d.domain).ToLower().Substring(0, 1);
                             int idx = Int32.Parse(collectionname, System.Globalization.NumberStyles.HexNumber);
                             dla[idx].Add(d);
@@ -258,7 +258,7 @@ namespace Online
 
                     for (int i = 0; i < 16; i++)
                     {
-                        IMongoCollection<DnsRescordsSimple> collection = db.GetCollection<DnsRescordsSimple>(i.ToString("x"));
+                        IMongoCollection<DnsRecordsSimple> collection = db.GetCollection<DnsRecordsSimple>(i.ToString("x"));
                         if (dla[i].Count > 0)
                             collection.InsertMany(dla[i]);
                     }
@@ -282,9 +282,9 @@ namespace Online
                 Console.WriteLine(ex.Message);
             }
         }
-        static DnsRescordsSimple Row2DnsRecords(dnsrecords dr)
+        static DnsRecordsSimple Row2DnsRecords(dnsrecords dr)
         {
-            DnsRescordsSimple d = new DnsRescordsSimple();
+            DnsRecordsSimple d = new DnsRecordsSimple();
             d.rid = long.Parse(dr.id.ToString());
             d.domain = dr.zone.ToString().ToLower() + ".";
             d.name = dr.host.ToString().ToLower();
@@ -321,7 +321,7 @@ namespace Online
         /// <summary>
         /// 验证IPV4
         /// </summary>
-        public const string CheckIPV4 = @"^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$";
+        public const string CheckIPV4 = @"^(\d{1}|[1-9]\d{1}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1}|[1-9]\d{1}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1}|[1-9]\d{1}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1}|[1-9]\d{1}|1\d\d|2[0-4]\d|25[0-5])$";
         /// <summary>
         /// 验证IPV6
         /// </summary>

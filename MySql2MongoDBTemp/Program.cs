@@ -1,5 +1,7 @@
-﻿using Models;
+﻿using BindDns.MongoDBEntity;
+using Models;
 using MongoDB;
+using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -14,7 +16,6 @@ namespace MySql2MongoDBTemp
 {
     class Program
     {
-        public static List<ViewEnum> vel = new List<ViewEnum>();
         static void Main(string[] args)
         {
             Console.WriteLine("程序功能：");
@@ -76,28 +77,28 @@ namespace MySql2MongoDBTemp
                 int idx = 0;
                 Console.WriteLine("query use time：" + q.ToString() + ";" + count + " rows data");
 
-                using (Mongo mongo = new Mongo(MongoHelper.connectionString))
-                {
-                    mongo.Connect();
-                    IMongoDatabase mongodatabase = mongo.GetDatabase(MongoHelper.database);
-                    while (idx < count)
-                    {
-                        List<ZonesSimple> dl = new List<ZonesSimple>();
-                        while (idx < count && dl.Count < 1001)
-                        {
-                            dl.Add(Row2ZoneSimple(dt.Rows[idx]));
-                            idx++;
-                            if (idx % 10000 == 0 && idx > 0)
-                                Console.WriteLine("{0} row insert;use time {1}", idx, watch.ElapsedMilliseconds);
-                        }
-                        IMongoCollection<ZonesSimple> categories = mongodatabase.GetCollection<ZonesSimple>("zones");
-                        categories.Insert(dl, true);
-                        dl.Clear();
-                    }
-                    Console.WriteLine("{0} row insert;use time {1}", idx, watch.ElapsedMilliseconds);
-                    mongo.Disconnect();
-                    watch.Stop();//停止计时
-                }
+                //using (Mongo mongo = new Mongo(MongoHelper.connectionString))
+                //{
+                //    mongo.Connect();
+                //    IMongoDatabase mongodatabase = mongo.GetDatabase(MongoHelper.database);
+                //    while (idx < count)
+                //    {
+                //        List<ZonesSimple> dl = new List<ZonesSimple>();
+                //        while (idx < count && dl.Count < 1001)
+                //        {
+                //            dl.Add(Row2ZoneSimple(dt.Rows[idx]));
+                //            idx++;
+                //            if (idx % 10000 == 0 && idx > 0)
+                //                Console.WriteLine("{0} row insert;use time {1}", idx, watch.ElapsedMilliseconds);
+                //        }
+                //        IMongoCollection<ZonesSimple> categories = mongodatabase.GetCollection<ZonesSimple>("zones");
+                //        categories.Insert(dl, true);
+                //        dl.Clear();
+                //    }
+                //    Console.WriteLine("{0} row insert;use time {1}", idx, watch.ElapsedMilliseconds);
+                //    mongo.Disconnect();
+                //    watch.Stop();//停止计时
+                //}
             }
             catch(Exception ex)
             {
@@ -106,7 +107,6 @@ namespace MySql2MongoDBTemp
         }
         static void MongoInsertFromDnsrecords()
         {
-            vel = MongoHelper.GetAll<ViewEnum>("zonesip_view");
             System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
             watch.Start();//开始计时     
             //
@@ -121,7 +121,7 @@ namespace MySql2MongoDBTemp
             Console.WriteLine("query use time：" + q.ToString() + ";" + count + " rows data");
 
 
-            List<DnsRescordsSimple>[] dla = new List<DnsRescordsSimple>[16] { new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>(), new List<DnsRescordsSimple>() };
+            List<DnsRecordsSimple>[] dla = new List<DnsRecordsSimple>[16] { new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>() };
 
             //for (int i = 0; i < 16; i++)
             //{
@@ -129,7 +129,7 @@ namespace MySql2MongoDBTemp
             //    Console.WriteLine(a + "    " + Int32.Parse(a, System.Globalization.NumberStyles.HexNumber));
             //}
             foreach (DataRow dr in ds.Tables[0].Rows) {
-                DnsRescordsSimple d = Row2DnsRecords(dr);
+                DnsRecordsSimple d = Row2DnsRecords(dr);
                 string collectionname = StringHelper.CalculateMD5Hash(d.domain).ToLower().Substring(0, 1);
                 int idx = Int32.Parse(collectionname, System.Globalization.NumberStyles.HexNumber);
                 dla[idx].Add(d);                
@@ -137,20 +137,20 @@ namespace MySql2MongoDBTemp
             Console.WriteLine("List count" + dla.Length);
             try
             {
-                using (Mongo mongo = new Mongo(MongoHelper.connectionString))
-                {
-                    mongo.Connect();
-                    IMongoDatabase mongodatabase = mongo.GetDatabase(MongoHelper.database);
-                    for (int i = 0; i < 16; i++)
-                    {
-                        IMongoCollection<DnsRescordsSimple> collection = mongodatabase.GetCollection<DnsRescordsSimple>(i.ToString("x"));
-                        if(dla[i].Count>0)
-                            collection.Insert(dla[i], true);
-                        Console.WriteLine("List " + i.ToString("x") + " obj count " + dla[i].Count);
-                    }
-                    watch.Stop();//停止计时
-                    mongo.Disconnect();
-                }
+                //using (Mongo mongo = new Mongo(MongoHelper.connectionString))
+                //{
+                //    mongo.Connect();
+                //    IMongoDatabase mongodatabase = mongo.GetDatabase(MongoHelper.database);
+                //    for (int i = 0; i < 16; i++)
+                //    {
+                //        IMongoCollection<DnsRecordsSimple> collection = mongodatabase.GetCollection<DnsRecordsSimple>(i.ToString("x"));
+                //        if(dla[i].Count>0)
+                //            collection.Insert(dla[i], true);
+                //        Console.WriteLine("List " + i.ToString("x") + " obj count " + dla[i].Count);
+                //    }
+                //    watch.Stop();//停止计时
+                //    mongo.Disconnect();
+                //}
             }
             catch (Exception ex) {
                 string re = ex.ToString();
@@ -197,21 +197,18 @@ namespace MySql2MongoDBTemp
                 domain = "";
             }
 
-            using (Mongo mongo = new Mongo(MongoHelper.connectionString))
+            var client = DriverConfiguration.Client;
+            var db = client.GetDatabase(DriverConfiguration.DatabaseNamespace.DatabaseName);
+            
+            for (int i = 0; i < 16; i++)
             {
-                mongo.Connect();
-                IMongoDatabase mongodatabase = mongo.GetDatabase(MongoHelper.database);
-                for (int i = 0; i < 16; i++)
-                {
-                    IMongoCollection<AuthoritiesSimple> collection = mongodatabase.GetCollection<AuthoritiesSimple>(i.ToString("x"));
-                    if(ala[i].Count>0)
-                        collection.Insert(ala[i], true);
-                    Console.WriteLine("List " + i.ToString("x") + " obj count " + ala[i].Count);
-                }
-                Console.WriteLine("{0} row inserted;use time {1}", idx, watch.ElapsedMilliseconds);
-                mongo.Disconnect();
-                watch.Stop();//停止计时
+                MongoDB.Driver.IMongoCollection<AuthoritiesSimple> collection = db.GetCollection<AuthoritiesSimple>(i.ToString("x"));
+                if(ala[i].Count>0)
+                    collection.InsertMany(ala[i]);
+                Console.WriteLine("List " + i.ToString("x") + " obj count " + ala[i].Count);
             }
+            Console.WriteLine("{0} row inserted;use time {1}", idx, watch.ElapsedMilliseconds);
+            watch.Stop();//停止计时
 
             //Console.WriteLine("{0} row inserted;use time {1}", idx, watch.ElapsedMilliseconds);
             watch.Stop();//停止计时//305049  913076
@@ -226,8 +223,8 @@ namespace MySql2MongoDBTemp
             return z;
         }
        
-        static DnsRescordsSimple Row2DnsRecords(DataRow dr) {
-            DnsRescordsSimple d = new DnsRescordsSimple();
+        static DnsRecordsSimple Row2DnsRecords(DataRow dr) {
+            DnsRecordsSimple d = new DnsRecordsSimple();
             d.domain = dr[0].ToString().ToLower() + ".";
             d.name = dr[1].ToString().ToLower();
             d.type = dr[2].ToString();
@@ -263,17 +260,22 @@ namespace MySql2MongoDBTemp
 
         static void DeletePRT() {
             string[] collection = new string[] { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f" };
-            var doc=new Document("type","PTR");
+
+            var builder2 = Builders<DnsRecordsSimple>.Filter;
             foreach (string c in collection)
             {
-                List<DnsRescordsSimple> dl = MongoHelper.GetList<DnsRescordsSimple>(c, doc);
+
+                var client = DriverConfiguration.Client;
+                var db = client.GetDatabase(DriverConfiguration.DatabaseNamespace.DatabaseName);
+                List<DnsRecordsSimple> dl = db.GetCollection<DnsRecordsSimple>(c).Find(builder2.And(builder2.Eq("type", "PTR"))).ToList<DnsRecordsSimple>();
                 if (dl.Count > 0)
                 {
-                    foreach (DnsRescordsSimple d in dl)
+                    foreach (DnsRecordsSimple d in dl)
                     {
-                        var docc = new Document("domain", d.domain).Add("rrcol", c);
-                        MongoHelper.Delete<ZonesSimple>("zones", docc);
-                        MongoHelper.Delete<DnsRescordsSimple>(c, doc);
+
+                        var builder = Builders<ZonesSimple>.Filter;
+                        db.GetCollection<ZonesSimple>("zones").DeleteMany(builder.And(builder.Eq("domain", d.domain),builder.Eq("rrcol", c)));
+                        db.GetCollection<DnsRecordsSimple>(c).DeleteMany(builder2.And(builder2.Eq("type", "PTR")));
                     }
                     Console.WriteLine("collection " + c + " dealt");
                 }
@@ -283,112 +285,112 @@ namespace MySql2MongoDBTemp
         }
         static void DeleteNoSOA()
         {
-            string[] collection = new string[] { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f" };
-            try
-            {
-                System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
-                watch.Start();//开始计时   
-                foreach (string c in collection)
-                {
-                    var count = MongoHelper.GetCount<ZonesSimple>("zones", new Document("rrcol", c));
-                    Console.WriteLine(c + " collection has " + count + " documents");
+            //string[] collection = new string[] { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f" };
+            //try
+            //{
+            //    System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
+            //    watch.Start();//开始计时   
+            //    foreach (string c in collection)
+            //    {
+            //        var count = MongoHelper.GetCount<ZonesSimple>("zones", new Document("rrcol", c));
+            //        Console.WriteLine(c + " collection has " + count + " documents");
 
-                    List<ZonesSimple> zl = MongoHelper.GetList<ZonesSimple>("zones", new Document("rrcol", c));
-                    int zcount = 0;
-                    int dealcount = 0;
-                    foreach (ZonesSimple z in zl)
-                    {
-                        try
-                        {
-                            List<DnsRescordsSimple> dl = MongoHelper.GetList<DnsRescordsSimple>(z.rrcol, new Document("domain", z.domain));
-                            if (dl.Count == 0)
-                            {
-                                MongoHelper.Delete<ZonesSimple>("zones", new Document("domain", z.domain).Add("rrcol", z.rrcol));
-                                zcount++;
-                            }
-                            else
-                            {
-                                var soalist = dl.FindAll(d => d.type == "SOA");
-                                var nslist = dl.FindAll(d => d.type == "NS");
-                                if (soalist.Count == 0 || nslist.Count == 0)
-                                {
-                                    MongoHelper.Delete<ZonesSimple>("zones", new Document("domain", z.domain).Add("rrcol", z.rrcol));
-                                    zcount++;
-                                    MongoHelper.Delete<DnsRescordsSimple>(z.rrcol, new Document("domain", z.domain));
-                                    if (soalist.Count == 0)
-                                        Console.WriteLine(z.domain + " no dnsrecords SOA data");
-                                    if (nslist.Count == 0)
-                                        Console.WriteLine(z.domain + " no dnsrecords NS data");
-                                }
-                            }
-                            dl.Clear();
-                            dealcount++;
-                            if(dealcount>0&&dealcount%100==0)
-                                Console.WriteLine(dealcount + " documents deal use time "+ watch.ElapsedMilliseconds);
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine(z.domain + "Exception");
-                        }
-                    }
-                    Console.WriteLine(c + " collection deal");
-                }
-                watch.Stop();
-            }
-            catch(Exception ex)
-            {
-                Console.WriteLine("Exception2 ");
-            }
+            //        List<ZonesSimple> zl = MongoHelper.GetList<ZonesSimple>("zones", new Document("rrcol", c));
+            //        int zcount = 0;
+            //        int dealcount = 0;
+            //        foreach (ZonesSimple z in zl)
+            //        {
+            //            try
+            //            {
+            //                List<DnsRecordsSimple> dl = MongoHelper.GetList<DnsRecordsSimple>(z.rrcol, new Document("domain", z.domain));
+            //                if (dl.Count == 0)
+            //                {
+            //                    MongoHelper.Delete<ZonesSimple>("zones", new Document("domain", z.domain).Add("rrcol", z.rrcol));
+            //                    zcount++;
+            //                }
+            //                else
+            //                {
+            //                    var soalist = dl.FindAll(d => d.type == "SOA");
+            //                    var nslist = dl.FindAll(d => d.type == "NS");
+            //                    if (soalist.Count == 0 || nslist.Count == 0)
+            //                    {
+            //                        MongoHelper.Delete<ZonesSimple>("zones", new Document("domain", z.domain).Add("rrcol", z.rrcol));
+            //                        zcount++;
+            //                        MongoHelper.Delete<DnsRecordsSimple>(z.rrcol, new Document("domain", z.domain));
+            //                        if (soalist.Count == 0)
+            //                            Console.WriteLine(z.domain + " no dnsrecords SOA data");
+            //                        if (nslist.Count == 0)
+            //                            Console.WriteLine(z.domain + " no dnsrecords NS data");
+            //                    }
+            //                }
+            //                dl.Clear();
+            //                dealcount++;
+            //                if(dealcount>0&&dealcount%100==0)
+            //                    Console.WriteLine(dealcount + " documents deal use time "+ watch.ElapsedMilliseconds);
+            //            }
+            //            catch (Exception ex)
+            //            {
+            //                Console.WriteLine(z.domain + "Exception");
+            //            }
+            //        }
+            //        Console.WriteLine(c + " collection deal");
+            //    }
+            //    watch.Stop();
+            //}
+            //catch(Exception ex)
+            //{
+            //    Console.WriteLine("Exception2 ");
+            //}
             Console.WriteLine("Mission Over");
         }
         public static void mongotest()
         {
-            List<DnsRescordsSimple> zl = MongoHelper.GetList<DnsRescordsSimple>("0", new Document("domain", "xiangyapromos.com."));
-            Console.WriteLine(zl.Count);
+            //List<DnsRecordsSimple> zl = MongoHelper.GetList<DnsRecordsSimple>("0", new Document("domain", "xiangyapromos.com."));
+            //Console.WriteLine(zl.Count);
         }
         /// <summary>
         /// C#反射遍历对象属性
         /// </summary>
         /// <typeparam name="T">对象类型</typeparam>
         /// <param name="model">对象</param>
-        public static Document Model2Document<T>(T model)
-        {
-            Type t = model.GetType();
-            PropertyInfo[] PropertyList = t.GetProperties();
-            Document doc = new Document();
-            foreach (PropertyInfo item in PropertyList)
-            {
-                doc.Add(item.Name, item.GetValue(model, null));
-            }
-            return doc;
-        }
-        public static Document DataRow2Document(DataRow dr,DataColumnCollection cs) {
-            Document doc = new Document();
-            foreach (DataColumn dc in cs) {
-                doc.Add(dc.ColumnName, dr[dc.ColumnName]);
-            }
-            return doc;
-        }
+        //public static Document Model2Document<T>(T model)
+        //{
+        //    Type t = model.GetType();
+        //    PropertyInfo[] PropertyList = t.GetProperties();
+        //    Document doc = new Document();
+        //    foreach (PropertyInfo item in PropertyList)
+        //    {
+        //        doc.Add(item.Name, item.GetValue(model, null));
+        //    }
+        //    return doc;
+        //}
+        //public static Document DataRow2Document(DataRow dr,DataColumnCollection cs) {
+        //    Document doc = new Document();
+        //    foreach (DataColumn dc in cs) {
+        //        doc.Add(dc.ColumnName, dr[dc.ColumnName]);
+        //    }
+        //    return doc;
+        //}
 
 
         public static void DataTransfer()
         {
-            string userid = "426446";
-            DataSet zds = MySQLHelper.Query("SELECT * from zones where userid="+ userid);
-            DataTable zdt = zds.Tables[0];
-            IList<zones> zl = ConvertTo<zones>(zdt);
-            MongoHelper.InsertAll<zones>("zones", zl);
-            Console.WriteLine("zones inserted");
-            DataSet ads = MySQLHelper.Query("SELECT * from authorities where ZoneID in (select id from zones where UserID=" + userid + ");");
-            DataTable adt = ads.Tables[0];
-            IList<authorities> al = ConvertTo<authorities>(adt);
-            MongoHelper.InsertAll<authorities>("authorities", al);
-            Console.WriteLine("authorities inserted");
-            DataSet dds = MySQLHelper.Query("SELECT * from dnsrecords where UserID=" + userid + ";");
-            DataTable ddt = dds.Tables[0];
-            IList<dnsrecords> dl = ConvertTo<dnsrecords>(ddt);
-            MongoHelper.InsertAll<dnsrecords>("dnsrecords", dl);
-            Console.WriteLine("dnsrescords inserted");
+            //string userid = "426446";
+            //DataSet zds = MySQLHelper.Query("SELECT * from zones where userid="+ userid);
+            //DataTable zdt = zds.Tables[0];
+            //IList<zones> zl = ConvertTo<zones>(zdt);
+            //MongoHelper.InsertAll<zones>("zones", zl);
+            //Console.WriteLine("zones inserted");
+            //DataSet ads = MySQLHelper.Query("SELECT * from authorities where ZoneID in (select id from zones where UserID=" + userid + ");");
+            //DataTable adt = ads.Tables[0];
+            //IList<authorities> al = ConvertTo<authorities>(adt);
+            //MongoHelper.InsertAll<authorities>("authorities", al);
+            //Console.WriteLine("authorities inserted");
+            //DataSet dds = MySQLHelper.Query("SELECT * from dnsrecords where UserID=" + userid + ";");
+            //DataTable ddt = dds.Tables[0];
+            //IList<dnsrecords> dl = ConvertTo<dnsrecords>(ddt);
+            //MongoHelper.InsertAll<dnsrecords>("dnsrecords", dl);
+            //Console.WriteLine("dnsrescords inserted");
         }
 
         public static IList<T> ConvertTo<T>(DataTable table)
@@ -450,9 +452,9 @@ namespace MySql2MongoDBTemp
 
             return obj;
         }
-        public static int GetView(string name) {
-            ViewEnum ve = vel.Where(v => v.name.ToLower() == name.ToLower()).SingleOrDefault();         
-            return ve.view;
-        }
+        //public static int GetView(string name) {
+        //    ViewEnum ve = vel.Where(v => v.name.ToLower() == name.ToLower()).SingleOrDefault();         
+        //    return ve.view;
+        //}
     }
 }

@@ -22,16 +22,16 @@ namespace Models
         public int minimum { get; set; }
         public long userid { get; set; }
     }
-    public class AuthoritiesSimple
+    public class AuthoritiesSimple:DnsRecordsSimple
     {
-        public long rid { get; set; }
-        public int userid { get; set; }
-        public string domain { get; set; }
-        public string name { get; set; }
-        public string type { get; set; } = "A";
-        public string rdata { get; set; }
-        public int ttl { get; set; } = 60;
-        public string view { get; set; } = "Def";
+        //public long rid { get; set; }
+        //public int userid { get; set; }
+        //public string domain { get; set; }
+        //public string name { get; set; }
+        //public string type { get; set; } = "A";
+        //public string rdata { get; set; }
+        //public int ttl { get; set; } = 60;
+        //public string view { get; set; } = "Def";
     }
 
 }

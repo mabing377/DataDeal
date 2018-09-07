@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Models
 {
-    public class DnsRescords: DnsRescordsSimple
+    public class DnsRecords: DnsRecordsSimple
     {
         public int id{get;set;}
         public int zoneid{get;set;}
@@ -20,7 +20,7 @@ namespace Models
         public int urlid { get; set; } = 0;// int(20) NOT NULL DEFAULT '0',
         public string str16{get;set;} 
     }
-    public class DnsRescordsSimple
+    public class DnsRecordsSimple
     {
         public long rid { get; set; }
         public int userid { get; set; }
