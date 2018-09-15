@@ -15,6 +15,83 @@ namespace RefreshMongoDB
     {
         static void Main(string[] args)
         {
+           
+
+            Console.ReadKey();
+        }
+        static void CheckDataIntegrality() {
+            List<TempZoneID> temp4 = DtToList<TempZoneID>.ConvertToModel(MySQLHelper.Query("select id as zoneid from Temp where type=4").Tables[0]);
+            DataTable dtid = MySQLHelper.Query("select min(id),max(id) from zones").Tables[0];
+            long min = Convert.ToInt32(dtid.Rows[0][0]);
+            long max = Convert.ToInt32(dtid.Rows[0][1]);
+
+            System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
+            watch.Start();//开始计时  
+            long index = max;
+            do
+            {
+                DataTable dt = MySQLHelper.Query("SELECT z.id,z.zone,z.userid,0 as level,z.nsstate from zones as z where z.userid<>348672 and z.Active='Y' and z.ForceStop='N' and z.id between " + (index - 1000) + " and " + index + "").Tables[0];
+                List<zones> zonesList = DtToList<zones>.ConvertToModel(dt);
+                List<zones> zl = new List<zones>();
+                foreach (zones z in zonesList)
+                {
+                    if (temp4.FindAll(tz => tz.zoneid == z.id).Count == 0)
+                        zl.Add(z);
+                }
+                Console.WriteLine("Data Filter;Use time={0};", watch.ElapsedMilliseconds);
+
+                List<ZonesSimple> zslist = new List<ZonesSimple>();
+                List<AuthoritiesSimple>[] ala = new List<AuthoritiesSimple>[16] { new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>() };
+                List<DnsRecordsSimple>[] dla = new List<DnsRecordsSimple>[16] { new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>() };
+
+                foreach (zones z in zl)
+                {
+                    ZonesSimple zs = Row2ZoneSimple(z);
+                    zslist.Add(zs);
+
+                    string rrcol = StringHelper.CalculateMD5Hash(zs.domain).ToLower().Substring(0, 1);
+                    //
+                    DataSet ds = MySQLHelper.Query("select id,zone,host,data,type,ttl,mbox,serial,refresh,retry,expire,minimum ," + z.userid + " as userid from authorities where zoneid=" + z.id + " order by type;" +
+                                                    "select id,zoneid,zone,host,type,data,ttl,view,mx_priority,userid from dnsrecords where active='Y'and type<>'PTR' and  zoneid= " + z.id + ";");
+
+                    DataTable adt = ds.Tables[0];
+                    DataTable rdt = ds.Tables[1];
+                    //
+                    List<authorities> alist = new List<authorities>();
+                    List<AuthoritiesSimple> aslist = new List<AuthoritiesSimple>();
+                    if (adt.Rows.Count > 0)
+                        aslist = Row2Authorities(DtToList<authorities>.ConvertToModel(adt));
+                    else
+                        break;
+                    //
+                    List<dnsrecords> dlist = DtToList<dnsrecords>.ConvertToModel(rdt);
+                    List<DnsRecordsSimple> dslist = new List<DnsRecordsSimple>();
+                    List<dnsrecords> wrongList = new List<dnsrecords>();
+                    foreach (dnsrecords d in dlist)
+                    {
+                        if (CheckRecordData(d.data, d.type, d.view, d.host) && CheckRecordHost(d.host, d.type))
+                            dslist.Add(Row2DnsRecords(d));
+                        else
+                            //记录违法的records
+                            wrongList.Add(d);
+                    }
+
+                }
+
+
+                index = index - 1001;
+                Console.WriteLine("Mongo Insert Success; Use time={0};", watch.ElapsedMilliseconds);
+                DnsUpdateInsert(zl);
+
+                Console.WriteLine("UpdateQueue Insert Success; Use time={0};", watch.ElapsedMilliseconds);
+
+                Console.WriteLine("min={0};max={1};index={2};", min, max, index);
+                Console.WriteLine("==============================================");
+            } while (index < max);
+            Console.WriteLine("End min={0};max={1};index={2};use time {3}", min, max, index, watch.ElapsedMilliseconds);
+            watch.Stop();//停止计时
+        }
+        static void ReMoMain() {
             List<TempZoneID> temp4 = DtToList<TempZoneID>.ConvertToModel(MySQLHelper.Query("select id as zoneid from Temp where type=4").Tables[0]);
             DataTable dtid = MySQLHelper.Query("select min(id),max(id) from zones").Tables[0];
             long min = Convert.ToInt32(dtid.Rows[0][0]);
@@ -48,7 +125,7 @@ namespace RefreshMongoDB
                     //
                     DataSet ds = MySQLHelper.Query("select id,zone,host,data,type,ttl,mbox,serial,refresh,retry,expire,minimum ," + z.userid + " as userid from authorities where zoneid=" + z.id + " order by type;" +
                                                     "select id,zoneid,zone,host,type,data,ttl,view,mx_priority,userid from dnsrecords where active='Y'and type<>'PTR' and  zoneid= " + z.id + ";");
-                    
+
                     DataTable adt = ds.Tables[0];
                     DataTable rdt = ds.Tables[1];
                     //
@@ -70,7 +147,7 @@ namespace RefreshMongoDB
                             //记录违法的records
                             wrongList.Add(d);
                     }
-                    
+
                 }
 
 
@@ -85,8 +162,6 @@ namespace RefreshMongoDB
             } while (index < max);
             Console.WriteLine("End min={0};max={1};index={2};use time {3}", min, max, index, watch.ElapsedMilliseconds);
             watch.Stop();//停止计时
-
-            Console.ReadKey();
         }
         static void MongoOperation(List<ZonesSimple> zslist, List<AuthoritiesSimple> aslist, List<DnsRecordsSimple> dslist, List<dnsrecords> wrongList)
         {
@@ -181,7 +256,7 @@ namespace RefreshMongoDB
         /// <summary>
         /// 验证Host首尾字符
         /// </summary>
-        public const string CheckDnsName = @"^([^._-]+|[^._-]+.*[^._-]+|[^._-]+.*|.*[^._-]+)$";
+        public const string CheckDnsName = @"^([^.-]+|[^.-]+.*[^.-]+|[^.-]+.*|.*[^.-]+)$";
         /// <summary>
         /// 验证子域名长度
         /// </summary>

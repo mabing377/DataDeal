@@ -25,14 +25,11 @@ namespace MySQL2MongoDB
             Console.WriteLine("3-域名解析状态查询并更新状态");
             Console.Write("请输入对应的数字：");
             switchaction:
-            CheckIPV4();
-            goto switchaction;
             int input = Console.Read();
             string basepath = AppDomain.CurrentDomain.BaseDirectory;
             switch (input)
             {
                 case 49:
-                    CheckIPV4();
                     break;
                 case 50:
                     break;
@@ -48,26 +45,14 @@ namespace MySQL2MongoDB
                 default:
                     break;
             }
+            goto switchaction;
             Console.ReadKey();
         }
-        static void CheckIPV4() {
-            string CheckIPV4 = @"^(\d{1}|[1-9]\d{1}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1}|[1-9]\d{1}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1}|[1-9]\d{1}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1}|[1-9]\d{1}|1\d\d|2[0-4]\d|25[0-5])$";
-            string input = Console.ReadLine();
-            Console.WriteLine(Regex.IsMatch(input, CheckIPV4));
-        }
-
 
     static void WhoisInfoDeal() {
-            string baseDic = AppDomain.CurrentDomain.BaseDirectory;
-            if (File.Exists(baseDic + "SqlStr\\" + System.DateTime.Now.ToString("yyyy-MM-dd") + ".sql"))
-            {
-                File.Delete(baseDic + "SqlStr\\" + System.DateTime.Now.ToString("yyyy-MM-dd") + ".sql");
-            }
-            Directory.CreateDirectory(Path.GetDirectoryName(baseDic + "SqlStr\\" + System.DateTime.Now.ToString("yyyy-MM-dd") + ".sql"));
-          
             System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
             watch.Start();//开始计时
-            DataSet ds = MySQLHelper.Query("select zone from zonestemp where nsstate=1 limit 0,100");
+            DataSet ds = MySQLHelper.Query("select zone from zones where nsstate=1 limit 0,100");
 
             DataTable dt = ds.Tables[0];
             long count = dt.Rows.Count;
@@ -190,19 +175,5 @@ namespace MySQL2MongoDB
                 Write2File.WriteLogToFile(zone + "   whoisException    " + ex.ToString());
             }
         }
-    }
-    internal class Domain : DomainBase
-    {
-        public int Mx_priority { get; set; }
-        public string View { get; set; } = "";
-    }
-    internal class DomainBase
-    {
-        public string Zone { get; set; }
-        public string Name { get; set; } = "nametest";
-        public string Type { get; set; } = "A";
-        public string Rdata { get; set; }
-        public int Ttl { get; set; } = 60;
-
     }
 }

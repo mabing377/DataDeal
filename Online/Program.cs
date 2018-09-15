@@ -126,7 +126,7 @@ namespace Online
         {
             try
             {
-
+                List<TempZoneID> temp = DtToList<TempZoneID>.ConvertToModel(MySQLHelper.Query("select id as zoneid from Temp").Tables[0]);
                 DataTable dtid = MySQLHelper.Query("select min(id),max(id) from zones").Tables[0];
                 long min = Convert.ToInt32(dtid.Rows[0][0]);
                 long max = Convert.ToInt32(dtid.Rows[0][1]);
@@ -136,11 +136,16 @@ namespace Online
                 long index = min;
                 do
                 {
-                    DataTable dt = MySQLHelper.Query("select a.id,a.zone,host,data,type,ttl,mbox,serial,refresh,retry,expire,minimum ,t.userid from authorities as a left join zones as t on a.ZoneID=t.id where a.ZoneID BETWEEN " + index + " and " + (index + 20000) + " and t.userid<>348672  and t.id is not NULL and t.Active='Y' and t.ForceStop='N'  order by a.zone,a.type").Tables[0];
+                    DataTable dt = MySQLHelper.Query("select a.id,a.zone,host,data,type,ttl,mbox,serial,refresh,retry,expire,minimum ,t.userid,a.zoneid from authorities as a left join zones as t on a.ZoneID=t.id where a.ZoneID BETWEEN " + index + " and " + (index + 20000) + " and t.userid<>348672  and t.id is not NULL and t.Active='Y' and t.ForceStop='N'  order by a.zone,a.type").Tables[0];
                     Console.WriteLine("getdatatabel from mysql             use time={0};", watch.ElapsedMilliseconds);
-                    List<authorities> aList = DtToList<authorities>.ConvertToModel(dt);
+                    List<authorities> aListtemp = DtToList<authorities>.ConvertToModel(dt);
                     Console.WriteLine("datatable convert to modellist;     use time={0};", watch.ElapsedMilliseconds);
-
+                    List<authorities> aList = new List<authorities>();
+                    foreach (authorities a in aListtemp)
+                    {
+                        if (temp.FindAll(tz => tz.zoneid == a.zoneid).Count == 0)
+                            aList.Add(a);
+                    }
                     List<AuthoritiesSimple>[] ala = new List<AuthoritiesSimple>[16] { new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>() };
                     List<authorities> drl = new List<authorities>();
                     List<AuthoritiesSimple> dl = new List<AuthoritiesSimple>();
@@ -221,6 +226,7 @@ namespace Online
         static void MongoInsertFromDnsrecords() {
             try
             {
+                List<TempZoneID> temp = DtToList<TempZoneID>.ConvertToModel(MySQLHelper.Query("select id as zoneid from Temp").Tables[0]);
                 DataTable dtid = MySQLHelper.Query("select min(id),max(id) from zones").Tables[0];
                 long min = Convert.ToInt32(dtid.Rows[0][0]);
                 long max = Convert.ToInt32(dtid.Rows[0][1]);
@@ -232,8 +238,15 @@ namespace Online
                 {
                     DataTable dt = MySQLHelper.Query("select d.id,d.zoneid,d.zone,d.host,d.type,d.data,d.ttl,d.view,d.mx_priority,d.userid from dnsrecords as d left join zones as t on d.ZoneID=t.id where d.Active='Y' and d.type<>'PTR' and d.ZoneID BETWEEN " + index + " and " + (index + 20000) + " and t.userid<>348672 and t.id is not NULL and t.Active='Y' and t.ForceStop='N' order by d.zone").Tables[0];
                     Console.WriteLine("GetDataTabel from mysql         Use Time={0};", watch.ElapsedMilliseconds);
-                    List<dnsrecords> rList = DtToList<dnsrecords>.ConvertToModel(dt);
+                    List<dnsrecords> rListtemp = DtToList<dnsrecords>.ConvertToModel(dt);
                     Console.WriteLine("DataTable Convert to ModelList; Use time={0};", watch.ElapsedMilliseconds);
+                    List<dnsrecords> rList = new List<dnsrecords>();
+                    foreach (dnsrecords d in rListtemp)
+                    {
+                        if (temp.FindAll(tz => tz.zoneid == d.zoneid).Count == 0)
+                            rList.Add(d);
+                    }
+
                     List<dnsrecords> unList = new List<dnsrecords>();
                     List<DnsRecordsSimple>[] dla = new List<DnsRecordsSimple>[16] { new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>() };
 
@@ -313,7 +326,7 @@ namespace Online
         /// <summary>
         /// 验证Host首尾字符
         /// </summary>
-        public const string CheckDnsName = @"^([^._-]+|[^._-]+.*[^._-]+|[^._-]+.*|.*[^._-]+)$";
+        public const string CheckDnsName = @"^([^.-]+|[^.-]+.*[^.-]+|[^.-]+.*|.*[^.-]+)$";
         /// <summary>
         /// 验证子域名长度
         /// </summary>

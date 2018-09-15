@@ -21,6 +21,7 @@ namespace Models
         public int expire { get; set; }
         public int minimum { get; set; }
         public long userid { get; set; }
+        public long zoneid { get; set; }
     }
     public class AuthoritiesSimple:DnsRecordsSimple
     {
