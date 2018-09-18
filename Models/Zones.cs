@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using MongoDB.Bson;
 
 namespace Models
 {
@@ -43,15 +40,16 @@ namespace Models
     }
     public class ZonesSimple
     {
+        public ObjectId id { get; set; }
         public int userid { get; set; }
         public string domain { get; set; }
         public string rrcol { get; set; }
         public int level { get; set; }
         public int nsstate { get; set; }
+        public int loadonstart { get; set; }
     }
     public class zones
     {
-
         public long id { get; set; }
         public string zone { get; set; }
         public int groupid { get; set; }

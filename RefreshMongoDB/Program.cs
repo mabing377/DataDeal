@@ -1,11 +1,13 @@
 ﻿using BindDns.MongoDBEntity;
 using Models;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
+using System.Text;
 using System.Text.RegularExpressions;
 using Utility;
 
@@ -15,9 +17,161 @@ namespace RefreshMongoDB
     {
         static void Main(string[] args)
         {
-           
-
+                Console.WriteLine("程序功能：");
+                Console.WriteLine("1-CheckZonesCount;");
+                Console.WriteLine("2-CheckDataIntegrality");
+                Console.WriteLine("3-ReMoMain");
+            Console.WriteLine("4-UpdateZonesID");
+                Console.WriteLine("5-TestZonesID");
+            //Console.WriteLine("5-delete no SOA or NS");
+            //Console.WriteLine("6-MongoDBTest");
+            //Console.WriteLine("7-User Data Transfer");
+            Console.Write("请输入对应的数字：");
+                int input = Console.Read();
+                string basepath = AppDomain.CurrentDomain.BaseDirectory;
+                //Console.WriteLine("你输入的是：" + input.ToString());
+                switchaction:
+                switch (input)
+                {
+                    case 49:
+                        CheckZonesCount();
+                        break;
+                    case 50:
+                    CheckDataIntegrality();
+                        break;
+                    case 51:
+                    ReMoMain();
+                        break;
+                    case 52:
+                    UpdateZonesID();
+                        break;
+                case 53:                    
+                    TestZonesID();
+                    break;
+                //case 54:
+                //    mongotest();
+                //    break;
+                //case 55:
+                //    DataTransfer();
+                //    break;
+                default:
+                        break;
+                }
+                input = Console.Read();
+                goto switchaction;
             Console.ReadKey();
+        }
+        static void TestZonesID() {
+            System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
+            watch.Start();//开始计时  
+            var client = DriverConfiguration.Client;
+            var db = client.GetDatabase(DriverConfiguration.DatabaseNamespace.DatabaseName);
+            IMongoCollection<ZonesSimple> categories = db.GetCollection<ZonesSimple>("zones");
+
+            var count = categories.Count(Builders<ZonesSimple>.Filter.Empty);
+
+            Console.WriteLine("Start");
+            int idx = 0;
+            int c = 0;
+            do
+            {
+                var zlist = categories.Find(Builders<ZonesSimple>.Filter.Empty).Skip(idx * 50000).Limit(50000).ToList<ZonesSimple>();
+                Console.WriteLine("Get     Data " + idx + "  use time" + watch.ElapsedMilliseconds);
+                List<ZonesSimple> zslist = new List<ZonesSimple>();
+                List<string> dArry = new List<string>();
+                foreach (ZonesSimple z in zlist)
+                {
+                    string str = StringHelper.CalculateMD5Hash(z.domain).ToLower();
+                    if (z.id.ToString() != str)
+                    {
+                        c++;
+                    }
+                }
+                idx++;
+                Console.WriteLine(c);
+            }
+            while (idx * 50000 < count);
+            Console.WriteLine("End  use time" + watch.ElapsedMilliseconds);
+        }
+        static void UpdateZonesID()
+        {
+
+            System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
+            watch.Start();//开始计时  
+            var client = DriverConfiguration.Client;
+            var db = client.GetDatabase(DriverConfiguration.DatabaseNamespace.DatabaseName);
+            IMongoCollection<ZonesSimple> categories = db.GetCollection<ZonesSimple>("zones");
+
+            var count = categories.Count(Builders<ZonesSimple>.Filter.Empty);
+            
+            Console.WriteLine("Start");
+            int idx = 0;
+            int wc = 0;
+            do
+            {
+                var zlist = categories.Find(Builders<ZonesSimple>.Filter.Empty).Skip(idx*500).Limit(500).ToList<ZonesSimple>();
+                Console.WriteLine("Get     Data " + idx + "  use time" + watch.ElapsedMilliseconds);
+                foreach(ZonesSimple z in zlist)
+                {
+                    if (z.id.ToString() != StringHelper.CalculateMD5Hash(z.domain).ToLower())
+                    {
+                        z.id = new ObjectId(StringHelper.CalculateMD5Hash(z.domain).ToLower());
+                        var builder = Builders<ZonesSimple>.Filter;
+                        var filter = builder.And(builder.Eq("domain", z.domain));
+                        try
+                        {
+                            categories.DeleteOne(filter);
+                            categories.InsertOne(z);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("occur exception");
+                        }
+                    }
+                    else {
+                        wc++;
+                        Console.WriteLine(z.domain +" without process");
+                    }
+                }
+                Console.WriteLine("Process Data " + idx+ "  use time" + watch.ElapsedMilliseconds);
+                idx++;
+            }
+            while (idx*500 < count);
+            Console.WriteLine("wc = "+ wc);
+            Console.WriteLine("End  use time" + watch.ElapsedMilliseconds);
+        }
+        static void CheckZonesCount() {
+            DataTable dtid = MySQLHelper.Query("select min(id),max(id) from zones").Tables[0];
+            long min = Convert.ToInt32(dtid.Rows[0][0]);
+            long max = Convert.ToInt32(dtid.Rows[0][1]);
+
+            System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
+            watch.Start();//开始计时  
+            long index = 3282504;
+            do
+            {
+                DataTable dt = MySQLHelper.Query("SELECT z.id,z.zone,z.userid,0 as level,z.nsstate from zones as z where z.id between " + (index - 1000) + " and " + index + "").Tables[0];
+                List<zones> zl = DtToList<zones>.ConvertToModel(dt);
+
+                var client = DriverConfiguration.Client;
+                var db = client.GetDatabase(DriverConfiguration.DatabaseNamespace.DatabaseName);
+
+                IMongoCollection<ZonesSimple> collection = db.GetCollection<ZonesSimple>("zones");
+                foreach (zones z in zl)
+                {
+                    ZonesSimple zs = Row2ZoneSimple(z);
+                    var builder = Builders<ZonesSimple>.Filter;
+                    long c = collection.Find<ZonesSimple>(builder.And(builder.Eq("domain", zs.domain))).Count();
+                    if (c > 1)
+                        Console.WriteLine(zs.domain + "   count=" + c);
+                }
+                index = index - 1001;
+                
+                Console.WriteLine("min={0};max={1};index={2}; Use time={3};", min, max, index, watch.ElapsedMilliseconds);
+                Console.WriteLine("==============================================");
+            } while (index < max);
+            Console.WriteLine("End min={0};max={1};index={2};use time {3}", min, max, index, watch.ElapsedMilliseconds);
+            watch.Stop();//停止计时
         }
         static void CheckDataIntegrality() {
             List<TempZoneID> temp4 = DtToList<TempZoneID>.ConvertToModel(MySQLHelper.Query("select id as zoneid from Temp where type=4").Tables[0]);

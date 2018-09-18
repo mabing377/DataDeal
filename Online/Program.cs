@@ -111,9 +111,11 @@ namespace Online
         static ZonesSimple Row2ZoneSimple(zones tz)
         {
             ZonesSimple z = new ZonesSimple();
-            z.userid = Convert.ToInt32(tz.userid);
             z.domain = tz.zone.ToLower() + ".";
-            z.rrcol = Utility.StringHelper.CalculateMD5Hash(z.domain).Substring(0, 1).ToLower();
+            string md5 = Utility.StringHelper.CalculateMD5Hash(z.domain);
+            z.id = new ObjectId(md5);
+            z.userid = Convert.ToInt32(tz.userid);
+            z.rrcol = md5.Substring(0, 1).ToLower();
             z.level = Convert.ToInt32(tz.level);
             z.nsstate = tz.nsstate;
             return z;
