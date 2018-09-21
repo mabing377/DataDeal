@@ -92,7 +92,13 @@ namespace Online
                     var db = client.GetDatabase(DriverConfiguration.DatabaseNamespace.DatabaseName);
                     IMongoCollection<ZonesSimple> categories = db.GetCollection<ZonesSimple>("zones");
                     if (dl.Count > 0)
-                        categories.InsertMany(dl);
+                        try
+                        {
+                            categories.InsertMany(dl);
+                        }
+                        catch (Exception ex) {
+                            Console.WriteLine(ex.Message);
+                        }
                     dl.Clear();
                     Console.WriteLine("MongoDB Inserted;               Use time={0};", watch.ElapsedMilliseconds);
 
@@ -112,8 +118,8 @@ namespace Online
         {
             ZonesSimple z = new ZonesSimple();
             z.domain = tz.zone.ToLower() + ".";
-            string md5 = Utility.StringHelper.CalculateMD5Hash(z.domain);
-            z.id = new ObjectId(md5);
+            string md5 = Utility.StringHelper.CalculateMD5Hash(z.domain).ToLower();
+            z.id = md5;
             z.userid = Convert.ToInt32(tz.userid);
             z.rrcol = md5.Substring(0, 1).ToLower();
             z.level = Convert.ToInt32(tz.level);
@@ -222,6 +228,7 @@ namespace Online
             return dl;
         }
         #endregion
+
         #region dnsrecords
 
 
@@ -441,7 +448,14 @@ namespace Online
         #endregion
         #endregion
 
-
+        #region 处理系统更新时，同步队列中的数据
+        static void ProcessUpdateQueueData(){
+            DataTable dt = SqlHelper.ExcuteTable("select DISTINCT ZoneID from DNSUpdateQueue where CreateTime>CONVERT(datetime,'2018-09-21 10:00:00',101) and CreateTime<CONVERT(datetime,'2018-09-21 11:00:00',101)");
+            foreach (DataRow dr in dt.Rows) {
+                long zoneid = Convert.ToInt32(dr[0]);
+            }
+        }
+        #endregion
         #region CheckAuthoritiesSOA
         static void CheckSOACount() {
 

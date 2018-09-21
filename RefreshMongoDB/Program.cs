@@ -21,10 +21,9 @@ namespace RefreshMongoDB
                 Console.WriteLine("1-CheckZonesCount;");
                 Console.WriteLine("2-CheckDataIntegrality");
                 Console.WriteLine("3-ReMoMain");
-            Console.WriteLine("4-UpdateZonesID");
+                Console.WriteLine("4-UpdateZonesID");
                 Console.WriteLine("5-TestZonesID");
-            //Console.WriteLine("5-delete no SOA or NS");
-            //Console.WriteLine("6-MongoDBTest");
+                Console.WriteLine("6-ExceptionLog");
             //Console.WriteLine("7-User Data Transfer");
             Console.Write("请输入对应的数字：");
                 int input = Console.Read();
@@ -48,9 +47,9 @@ namespace RefreshMongoDB
                 case 53:                    
                     TestZonesID();
                     break;
-                //case 54:
-                //    mongotest();
-                //    break;
+                case 54:
+                    ExceptionLog();
+                    break;
                 //case 55:
                 //    DataTransfer();
                 //    break;
@@ -60,6 +59,109 @@ namespace RefreshMongoDB
                 input = Console.Read();
                 goto switchaction;
             Console.ReadKey();
+        }
+        static void ExceptionLog() {
+            DataTable dt = SqlHelper.ExcuteTable("select distinct domain from exceptionlog where isprocess=0");
+            foreach (DataRow dr in dt.Rows)
+            {
+                DataTable dt1 = SqlHelper.ExcuteTable("select * from exceptionlog where domain='" + dr["domain"].ToString() + "' order by id desc");
+                DataRow dr1 = dt1.Rows[0];
+                long zoneID = Convert.ToInt64(dr1["zoneid"]);
+                string domain = dr1["domain"].ToString();
+                
+                Console.WriteLine("Processing" + domain);
+                var client = DriverConfiguration.Client;
+                var db = client.GetDatabase(DriverConfiguration.DatabaseNamespace.DatabaseName);
+                IMongoCollection<ZonesSimple> collection = db.GetCollection<ZonesSimple>("zones");
+                string rrcol = StringHelper.CalculateMD5Hash(domain + ".").ToLower().Substring(0, 1);
+                IMongoCollection<DnsRecordsSimple> collection2 = db.GetCollection<DnsRecordsSimple>(rrcol);
+                DataTable dtz = new DataTable();
+                //switch (dr1["functionname"])
+                //{
+                //    case "DeleteZoneAllInfo":
+                //        collection.DeleteOne(Builders<ZonesSimple>.Filter.Eq("domain", domain + "."));
+                //        collection2.DeleteMany(Builders<DnsRecordsSimple>.Filter.Eq("domain", domain + "."));
+                //        if (dr1["nsnamestr"].ToString() != "")
+                //            Add2Queue(zoneID, domain,1, dr1["nsnamestr"].ToString());
+                //        else
+                //            Add2Queue(zoneID, domain, 0);
+                //        break;
+                //    case "UpdateZoneUser":
+                //        dtz = MySQLHelper.Query("select * from zones where id=" + zoneID).Tables[0];
+                //        collection.UpdateOne(Builders<ZonesSimple>.Filter.Eq("domain", domain + "."), Builders<ZonesSimple>.Update.Set("userid", dt.Rows[0]["UserID"]));
+                        
+                //        var builder = Builders<DnsRecordsSimple>.Filter;
+                //        collection2.UpdateMany(builder.And(builder.Eq("domain", domain + "."), builder.Gt("rid", 0)), Builders<DnsRecordsSimple>.Update.Set("userid", dt.Rows[0]["UserID"]));
+
+                //        break;
+                //    case "InsertZonesWithAuthorities":
+                //        dtz = MySQLHelper.Query("select * from zones where id=" + zoneID).Tables[0];
+                        
+                //        break;
+                //    case "InsertZonesWithAllInfo":
+                //        BL4DPDK.InsertZonesWithAllInfo(theZone);
+                //        break;
+                //    case "InsertAuthorities":
+                //        BL4DPDK.InsertAuthorities(Convert.ToInt32(dr1["zoneid"]), dr1["domain"].ToString(), theZone.UserID, dr1["nsnamestr"].ToString());
+                //        break;
+                //    case "InsertADnsrecord":
+                //        BL4DPDK.InsertADnsrecord(BLDnsrecords4DPDK.GetARecord(Convert.ToInt32(dr["RID"])));
+                //        break;
+                //    case "InsertDnsrecords":
+                //        BL4DPDK.InsertDnsrecords(theZone);
+                //        break;
+                //    case "InsertDnsrecordsBind":
+                //        BL4DPDK.InsertDnsrecordsBind(theZone, Convert.ToInt32(dr["extendcolumn"]));
+                //        break;
+                //    case "UpdateDnsrecord":
+                //        BL4DPDK.UpdateDnsrecord(BLDnsrecords4DPDK.GetARecord(Convert.ToInt32(dr["rid"])));
+                //        break;
+                //    case "DeleteADnsrecord":
+                //        dnsrecords theRecord = new dnsrecords();
+                //        theRecord.ZoneID = Convert.ToInt32(dr1["zoneid"]);
+                //        theRecord.Zone = dr1["domain"].ToString();
+                //        theRecord.ID = Convert.ToInt32(dr["RID"]);
+                //        BL4DPDK.DeleteADnsrecord(theRecord);
+                //        break;
+                //    case "DeleteAllDnsrecords":
+                //        BL4DPDK.DeleteAllDnsrecords(theZone);
+                //        break;
+                //    case "DeleteDnsrecordByZoneView":
+                //        BL4DPDK.DeleteDnsrecordByZoneView(theZone, dr["extendcolumn"].ToString());
+                //        break;
+                //    case "DeleteDnsrecordByZoneHost":
+                //        BL4DPDK.DeleteDnsrecordByZoneHost(theZone, dr["extendcolumn"].ToString());
+                //        break;
+                //    case "DeleteDnsrecordByZoneHostType":
+                //        string[] strArry = dr["ExtendColumn"].ToString().Split(',');
+                //        BL4DPDK.DeleteDnsrecordByZoneHostType(theZone, strArry[0], strArry[1]);
+                //        break;
+                //    default:
+                //        break;
+                //}
+
+                SqlHelper.ExcuteNoQuery(string.Format("update ExceptionLog set IsProcess=1,ProcessTime='{1}' where domain='{0}'", dr["domain"], DateTime.Now));
+                Console.WriteLine(dr["domain"].ToString() + "process complete");
+            }
+        }
+        static void Add2Queue(long zoneid,string zone, int modifyState, string NSName = "")
+        {
+            SqlHelper.ExcuteNoQuery(string.Format("insert into dnsupdatequeue(zoneid,domain,status,modifystate,createtime,nsname)values({0},'{1}',{2},{3},{4},'{5}')", zoneid,zone,0,modifyState,DateTime.Now,NSName));
+            //using (DNSDataContext dnsDB = DataContextFactory.CreateDNS())
+            //{
+            //    DNSUpdateQueue u = new DNSUpdateQueue()
+            //    {
+            //        ZoneID = theZone.ID,
+            //        Domain = theZone.Zone,
+            //        Status = 0,
+            //        ModifyState = modifyState,
+            //        CreateTime = DateTime.Now,
+            //        NSName = NSName
+            //    };
+
+            //    dnsDB.DNSUpdateQueue.InsertOnSubmit(u);
+            //    dnsDB.SubmitChanges();
+            //}
         }
         static void TestZonesID() {
             System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
@@ -81,11 +183,12 @@ namespace RefreshMongoDB
                 List<string> dArry = new List<string>();
                 foreach (ZonesSimple z in zlist)
                 {
-                    string str = StringHelper.CalculateMD5Hash(z.domain).ToLower();
-                    if (z.id.ToString() != str)
-                    {
-                        c++;
-                    }
+                    //string str = StringHelper.CalculateMD5Hash(z.domain).ToLower();
+                    //string zid = z.id.ToString();
+                    //if (z.id != ObjectId.Parse(str))
+                    //{
+                    //    c++;
+                    //}
                 }
                 idx++;
                 Console.WriteLine(c);
@@ -115,7 +218,7 @@ namespace RefreshMongoDB
                 {
                     if (z.id.ToString() != StringHelper.CalculateMD5Hash(z.domain).ToLower())
                     {
-                        z.id = new ObjectId(StringHelper.CalculateMD5Hash(z.domain).ToLower());
+                        z.id = StringHelper.CalculateMD5Hash(z.domain).ToLower();
                         var builder = Builders<ZonesSimple>.Filter;
                         var filter = builder.And(builder.Eq("domain", z.domain));
                         try

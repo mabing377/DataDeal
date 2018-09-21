@@ -40,7 +40,7 @@ namespace Models
     }
     public class ZonesSimple
     {
-        public ObjectId id { get; set; }
+        public string id { get; set; }
         public int userid { get; set; }
         public string domain { get; set; }
         public string rrcol { get; set; }
