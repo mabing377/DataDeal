@@ -24,6 +24,11 @@ namespace TestRecord
             CheckRecordData(this.textBox3.Text.Trim(), this.textBox2.Text.Trim(), this.textBox4.Text.Trim(), this.textBox1.Text.Trim());
         }
 
+
+
+
+
+
         #region CheckData
         /// <summary>
         /// 验证是否子域名Host

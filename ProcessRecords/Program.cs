@@ -24,7 +24,7 @@ namespace ProcessRecords
             Console.WriteLine("2-RefreshSOANS");
             Console.WriteLine("3-RefreshRecord");
             Console.WriteLine("4-RefreshBindZones");
-            //Console.WriteLine("5-CheckMXData");
+            Console.WriteLine("5-CheckMXData");
             //Console.WriteLine("6-RefreshNewColumn");
             //Console.WriteLine("7-RefreshOldData");
             //Console.WriteLine("8-DeleteSOANS");
@@ -46,9 +46,9 @@ namespace ProcessRecords
                 case 52:
                     RefreshBindZones();
                     break;
-                //case 53:
-                //    CheckMXData();
-                //    break;
+                case 53:
+                    DeleteIgnoreHost();
+                    break;
                 //case 54:
                 //    RefreshNewColumn();
                 //    break;
@@ -601,6 +601,28 @@ namespace ProcessRecords
                     }
                 }
             }            
+        }
+
+
+        static void DeleteIgnoreHost() {
+            string sql1 = "select d.id,d.zoneid,d.zone,d.host,d.type,d.data,d.ttl,d.view,d.mx_priority,d.userid,d.active from dnsrecords as d  where (`Host` like '%@%' and `Host` <>'@') or (`Host`='@' and Type='NS')";
+            DataTable dtd = MySQLHelper.Query(sql1).Tables[0];
+            Console.WriteLine("getdata count= "+dtd.Rows.Count);
+            List<dnsrecords> dlist = DtToList<dnsrecords>.ConvertToModel(dtd);
+            var client = DriverConfiguration.Client;
+            var db = client.GetDatabase(DriverConfiguration.DatabaseNamespace.DatabaseName);
+            foreach (dnsrecords d in dlist) {
+                string domain = d.zone + ".";
+                string rrcol = Utility.StringHelper.CalculateMD5Hash(domain).Substring(0, 1).ToLower();
+                IMongoCollection<DnsRecordsSimple> categoriesD = db.GetCollection<DnsRecordsSimple>(rrcol);
+                var count = categoriesD.Find(Builders<DnsRecordsSimple>.Filter.Eq("rid", d.id)).ToList<DnsRecordsSimple>().Count;
+                if (count > 0)
+                {
+                    Console.WriteLine("zone= " + d.zone + " id= " + d.id + " type= " + d.type);
+                    categoriesD.DeleteMany(Builders<DnsRecordsSimple>.Filter.Eq("rid", d.id));
+                }
+            }
+
         }
 
         #region CheckData
