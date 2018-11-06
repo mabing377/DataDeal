@@ -31,6 +31,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MongoDBHelper", "MongoDBHel
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RefreshMongoDB", "RefreshMongoDB\RefreshMongoDB.csproj", "{AEC2F05A-3CD4-480E-BD0D-6F3F66585995}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProcessRecords", "ProcessRecords\ProcessRecords.csproj", "{1D6EAFC0-E9F3-459F-A507-F17622868E92}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestRecord", "TestRecord\TestRecord.csproj", "{D789FAE0-6969-422D-8265-D53EFD6878FB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -93,6 +97,14 @@ Global
 		{AEC2F05A-3CD4-480E-BD0D-6F3F66585995}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AEC2F05A-3CD4-480E-BD0D-6F3F66585995}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AEC2F05A-3CD4-480E-BD0D-6F3F66585995}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1D6EAFC0-E9F3-459F-A507-F17622868E92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D6EAFC0-E9F3-459F-A507-F17622868E92}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D6EAFC0-E9F3-459F-A507-F17622868E92}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D6EAFC0-E9F3-459F-A507-F17622868E92}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D789FAE0-6969-422D-8265-D53EFD6878FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D789FAE0-6969-422D-8265-D53EFD6878FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D789FAE0-6969-422D-8265-D53EFD6878FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D789FAE0-6969-422D-8265-D53EFD6878FB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

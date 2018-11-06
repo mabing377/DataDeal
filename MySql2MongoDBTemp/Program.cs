@@ -1,15 +1,11 @@
 ﻿using BindDns.MongoDBEntity;
 using Models;
-using MongoDB;
 using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Utility;
 
 namespace MySql2MongoDBTemp
@@ -285,62 +281,52 @@ namespace MySql2MongoDBTemp
         }
         static void DeleteNoSOA()
         {
-            //string[] collection = new string[] { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f" };
-            //try
-            //{
-            //    System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
-            //    watch.Start();//开始计时   
-            //    foreach (string c in collection)
-            //    {
-            //        var count = MongoHelper.GetCount<ZonesSimple>("zones", new Document("rrcol", c));
-            //        Console.WriteLine(c + " collection has " + count + " documents");
+            string[] collection = new string[] { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f" };
+            try
+            {
+                var client = DriverConfiguration.Client;
+                var db = client.GetDatabase(DriverConfiguration.DatabaseNamespace.DatabaseName);
+                System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
+                watch.Start();//开始计时   
+                foreach (string c in collection)
+                {
+                    IMongoCollection<AuthoritiesSimple> categoriesA = db.GetCollection<AuthoritiesSimple>(c);
+                    IMongoCollection<ZonesSimple> categoriesZ = db.GetCollection<ZonesSimple>("zones");
 
-            //        List<ZonesSimple> zl = MongoHelper.GetList<ZonesSimple>("zones", new Document("rrcol", c));
-            //        int zcount = 0;
-            //        int dealcount = 0;
-            //        foreach (ZonesSimple z in zl)
-            //        {
-            //            try
-            //            {
-            //                List<DnsRecordsSimple> dl = MongoHelper.GetList<DnsRecordsSimple>(z.rrcol, new Document("domain", z.domain));
-            //                if (dl.Count == 0)
-            //                {
-            //                    MongoHelper.Delete<ZonesSimple>("zones", new Document("domain", z.domain).Add("rrcol", z.rrcol));
-            //                    zcount++;
-            //                }
-            //                else
-            //                {
-            //                    var soalist = dl.FindAll(d => d.type == "SOA");
-            //                    var nslist = dl.FindAll(d => d.type == "NS");
-            //                    if (soalist.Count == 0 || nslist.Count == 0)
-            //                    {
-            //                        MongoHelper.Delete<ZonesSimple>("zones", new Document("domain", z.domain).Add("rrcol", z.rrcol));
-            //                        zcount++;
-            //                        MongoHelper.Delete<DnsRecordsSimple>(z.rrcol, new Document("domain", z.domain));
-            //                        if (soalist.Count == 0)
-            //                            Console.WriteLine(z.domain + " no dnsrecords SOA data");
-            //                        if (nslist.Count == 0)
-            //                            Console.WriteLine(z.domain + " no dnsrecords NS data");
-            //                    }
-            //                }
-            //                dl.Clear();
-            //                dealcount++;
-            //                if(dealcount>0&&dealcount%100==0)
-            //                    Console.WriteLine(dealcount + " documents deal use time "+ watch.ElapsedMilliseconds);
-            //            }
-            //            catch (Exception ex)
-            //            {
-            //                Console.WriteLine(z.domain + "Exception");
-            //            }
-            //        }
-            //        Console.WriteLine(c + " collection deal");
-            //    }
-            //    watch.Stop();
-            //}
-            //catch(Exception ex)
-            //{
-            //    Console.WriteLine("Exception2 ");
-            //}
+                    IList<ZonesSimple> zlist = categoriesZ.Find(Builders<ZonesSimple>.Filter.Eq("rrcol", c)).ToList<ZonesSimple>();
+                    
+                    Console.WriteLine(c + " collection has " + zlist.Count + " documents");
+                    
+                    int zcount = 0;
+                    int dealcount = 0;
+                    foreach (ZonesSimple z in zlist)
+                    {
+                        try
+                        {
+                            var filterA = Builders<AuthoritiesSimple>.Filter;
+                            var builderA = filterA.And(filterA.Eq("domain", z.domain), filterA.Lt("rid", 0));
+                            var count = categoriesA.Find(builderA).Count();
+
+                            if (count == 0 || count > 5) {
+                                if (count > 5) {
+                                    categoriesA.DeleteMany(builderA);
+                                }
+                                
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(z.domain + "Exception");
+                        }
+                    }
+                    Console.WriteLine(c + " collection deal");
+                }
+                watch.Stop();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Exception2 ");
+            }
             Console.WriteLine("Mission Over");
         }
         public static void mongotest()

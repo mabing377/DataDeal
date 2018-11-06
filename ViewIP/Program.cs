@@ -14,9 +14,10 @@ namespace ViewIP
         {
             string basepath = AppDomain.CurrentDomain.BaseDirectory;
 
-            DoAction(basepath + "acl\\", 0);
-            Console.WriteLine("=================================================================");
-            DoAction(basepath + "province\\", 1);
+            GetIP(basepath + "acl\\");
+            Console.WriteLine("=================================================================1");
+            GetIP(basepath + "province\\");
+            Console.WriteLine("=================================================================2");
             Console.ReadKey();
             return 1;
         }
@@ -81,6 +82,41 @@ namespace ViewIP
                     }
                 }
                 Console.WriteLine(count + " File Handled");
+            }
+            catch (Exception ex)
+            {
+                string msg = ex.ToString();
+            }
+        }
+        static void GetIP(string path) {
+            try
+            {
+                string[] files = Directory.GetFiles(path);
+                foreach (string file in files)
+                {
+                    string content;
+                    string view = "";
+                    StreamReader sr = new StreamReader(file, Encoding.Default);
+                    while ((content = sr.ReadLine()) != null)
+                    {
+                        if (content.Contains("{"))
+                        {
+                            view = content.Substring(4, content.Length - 6).Trim();
+                            Console.WriteLine(view);
+                        }
+                        else if (content.Contains("}") || content.Contains("#"))
+                        {
+                        }
+                        else
+                        {
+                            content = content.Remove(content.Length - 1);
+                            if (content.Contains("211.89.227"))
+                                Console.WriteLine(view+" =======================");
+                            if (content.Contains("211.89.229"))
+                                Console.WriteLine(view);
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {

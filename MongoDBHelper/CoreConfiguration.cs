@@ -205,10 +205,10 @@ namespace BindDns.MongoDBEntity
             if (uri == null)
             {
                 uri = ConfigurationManager.ConnectionStrings["MongoConnectionString"].ConnectionString;// "mongodb://192.168.20.230";
-                if (IsReplicaSet(uri))
-                {
-                    uri += "/?connect=replicaSet";
-                }
+                //if (IsReplicaSet(uri))
+                //{
+                //    uri += "/?connect=replicaSet";
+                //}
             }
 
             return new ConnectionString(uri);

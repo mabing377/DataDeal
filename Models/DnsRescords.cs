@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MongoDB.Bson;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,6 +23,7 @@ namespace Models
     }
     public class DnsRecordsSimple
     {
+        public ObjectId _id { get; set; }
         public long rid { get; set; }
         public int userid { get; set; }
         public string domain { get; set; }
@@ -30,6 +32,7 @@ namespace Models
         public string rdata { get; set; }
         public int ttl { get; set; } = 600;
         public string view { get; set; } = "Def";
+        public string is_stop { get; set; } = "N";
     }
 
     public class dnsrecords
@@ -44,6 +47,7 @@ namespace Models
         public string data { get; set; }
         public int ttl { get; set; }
         public string view { get; set; }
+        public string active { get; set; }
     }
     
 }

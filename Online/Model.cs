@@ -16,5 +16,7 @@ namespace Online
         public string zone { get; set; }
         public long level { get; set; }
         public int nsstate { get; set; }
+        public string active { get; set; } = "N";
+        public string forcestop { get; set; } = "N";
     }
 }
