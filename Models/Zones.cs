@@ -49,6 +49,7 @@ namespace Models
         public int loadonstart { get; set; }
         public string is_stop { get; set; } = "N";
         public string force_stop { get; set; } = "N";
+        public string rdomain { get; set; }
     }
     public class zones
     {
