@@ -60,6 +60,8 @@ namespace Models
         public int nsstate { get; set; }
         public string active { get; set; } = "N";
         public string forcestop { get; set; } = "N";
+        public int domainlevel { get; set; }
+        public string rzone { get; set; }
     }
     public class zoneswithbind : zones {
         public string rzone { get; set; }
