@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Utility;
 
@@ -21,7 +22,7 @@ namespace ProcessRecords
             //Logger.Init(basepath+ "config\\log4net.conf");
             Console.WriteLine("程序功能：");
             Console.WriteLine("1-peocess wrong data;");
-            Console.WriteLine("2-RefreshSOANS");
+            Console.WriteLine("2-CheckSOANS");
             Console.WriteLine("3-RefreshRecord");
             Console.WriteLine("4-RefreshBindZones");
             Console.WriteLine("5-CheckMXData");
@@ -29,7 +30,7 @@ namespace ProcessRecords
             Console.WriteLine("7-RefreshRecordsN");
             Console.WriteLine("8-RefreshRDomain2");
             Console.WriteLine("9-UpdateLoadOnStart");
-            Console.WriteLine("0-ReloadZones");
+            Console.WriteLine("0-ReloadAllRecords");
             Console.Write("请输入对应的数字：");
             int input = Console.Read();
             //Console.WriteLine("你输入的是：" + input.ToString());
@@ -37,10 +38,10 @@ namespace ProcessRecords
             switch (input)
             {
                 case 49:
-                    DoAction3(basepath + "file\\");//dnsla.txt;
+                    DoAction4(basepath + "file\\");//dnsla.txt;
                     break;
                 case 50:
-                    CheckLoadOnStart();
+                    CheckSOANS();
                     break;
                 case 51:
                     RefreshRecord();
@@ -64,7 +65,7 @@ namespace ProcessRecords
                     UpdateLoadOnStart();
                     break;
                 case 48:
-                    ReloadZones();
+                    ReloadAllRecords();
                     break;
                 default:
                     break;
@@ -336,6 +337,52 @@ namespace ProcessRecords
                 string msg = ex.ToString();
             }
         }
+        static void DoAction4(string path)
+        {
+            try
+            {
+                System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
+                watch.Start();//开始计时 
+                string[] collection = new string[] { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f" };
+
+                List<AuthoritiesSimple>[] dla = new List<AuthoritiesSimple>[16] { new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>(), new List<AuthoritiesSimple>() };
+                
+                var client = DriverConfiguration.Client;
+                var db = client.GetDatabase(DriverConfiguration.DatabaseNamespace.DatabaseName);
+                IMongoCollection<ZonesSimple> categoriesZ = db.GetCollection<ZonesSimple>("zones");
+                List<string> processZone = new List<string>();
+                    
+                string sql = string.Format("select a.id,a.zone,host,data,type,ttl,mbox,serial,refresh,retry,expire,minimum ,a.zoneid,z.userid from authorities as a left join zones as z on z.id=a.zoneid where a.zone in('luxiang-sx.com.cn', 'bqg9.com', 'jhlf.tw', 'wuhujiaoyou.com', 'ghrd.tw', 'wyths.cn', 'ivec.tw', 'nainternet.cn', 'rtrtqa.top', 'z8uyd1i.top', 'luowula.com', 'askylc51.cn', 'lyyhnhcl.com', 'lehai5201314.com', 'yesv8.com', 'baichunyuan.com', 'vbj81.cn', 'geqiong.com', 'jccts.tw', '88f31.com', 'zsa9.cn', 'ljjkl.tw', 'huonwe.top', '027254.com', '686ocom.cn', 'e969y5.cn', 'm8japj.cn', 'bjdsth.com', '452300.com', '16884661.com', 'mgfo.cc', 'shtest17.com', 'xelove.com', 'qq83sex.com', 'uvbofey.ml', 'heyugen.vu', '513.cn.com', 'z355677.com', 'gzsblqsm.com', 'vwwu.tw', 'ohdb.tw', 'qhwh.tw', 'nefn.tw', 'jqgi.tw', 'kskg.tw', 'sxmgtw.loan', 'fvaqlmu.top', 'vlescv.info', 'zzgewu.com', '5678pk.com', 'ukvki.cn', 'cstymlmj.com', '0870vip.com', 'lilywood.cn', 'newwanli.cn', 'xsnanxian.cn', 'dvd0052.com', 'geili345.com', 'gushi369.com', 'wo5230.com', 'chmyzb.com', 'jmep-auction.com', 'fang365.com.cn', 'dw2bu8uan.com', 'diaosigouwu.com', 'amstocktransfer.com', 'gc7.org', 'nglbd.tw', 'nukk.tw', '15nl3.cn', 'gxjg.tw', 'bxio.tw', 'nebb.tw', 'ahvwxu.loan', 'rtrtud.top', 'rycunlfq.top', 'liutaitai.cn', 'fumvyq.loan', 'wanwanyue.com', 'yxzyk.cn', 'lzrhz.com', 'bjduoyi.com', '52wbgw.com', '05181.com', 'ljsmt.loan', 'xiaoshuo53.com', 'd109chuanqisf.us', '3s7w485dpz.com', 'cqros.tw', 'vwgn.tw', 'ekemb.cn', 'brgi28.tw', 'weqiun.loan', '9n4z.cn', '027wuhanyewang.com', '234.lu', 'k8er0g.cn', 'lgfree.com', 'jlsccsjhjy.com', 'dyt58.com', 'sivpl.cn', 'd4chuanqisf.us', 'xinpujingabz.com', 'likaige.tk', 'test123456.com', 'mmdhw.tw', 'iyrwtkff.top', 'gtoh.tw', 'hywh.tw', 'cnwyi.com', 'plwdpki.top', 'bsjyty.loan', 'khenex.loan', 'clyjtm.cn', 'meibashop.net', 'agegsx.cn', 'orrzjg.cn', 'mdo5a7.cn', '6703333.cn', 'tuangou234.com', 'xiaosa360.com', 'pgyyuan.com', '9b500.com', 'szhaten.net', 'qoosocks.com', 'awr20j.pw', 'fengjie66.com', 'xn--dfv61zink.com', 'c0376.com', 'jggng.cn', 'iqaezn.loan', '355687.top', 'oip8o3.cn', 'ze99.cn', 'sh-hxeg.com.cn', 'geili234.com', 'gmsix.com', 'wxrlyy.com', 'tbqz.net', 'ha38ha.com', 'gvjyhpb.ml', 'e95chuanqisf.us', 'tjjrg.com', 'ak6666.com', '0571pt.com', 'rfho.tw', 'rjsq4s0.com.cn', 'luismoyazac.com', 'ctvvj.cn', 'bomnp.com', 'gilu.tw', 'pqug.tw', 'hglmyn.loan', 'ttcmddcm.ga', 'southcollege.com.cn', 'gudongzhengji.com', 'longfenger.com', 'dddd32.cn', 'iikzc.cn', 'aiqing300.com', 'bkso.cc', '438633.com', 'qiditoys.cn', 'yhbjyzb.com', 'ap6a7fi.com', '7ojgo0a.com', 'captainnx.co.cc', 'mrzti.com', 'avdn.tw', 'mtkdo.cn', 'dindanbao.com', 'ztdiaocw.com', 'imqn.tw', 'wbhk.tw', 'umpdqqj.top', 'wwwxiaoming876com.cn', 'diesuca.cn', '881648.cc', 'choice-smart.net', '8.cn', 'jinlongzuche.com', 'tiqzu.cn', 'nanditech.com.cn', 'shishishangmao.com.cn', 'irwmn.cn', 'morecup.com', 'dghj54d5jh.com', 'd77chuanqisf.us', 'czvxu.com', 'ncegao.com', 'zhaoys.pw', '029tea.cn', 'pohq.tw', 'mtug.tw', 'fjhj.tw', 'jfhrpurc.top', 'dhjdp.tw', 'bj7vip.cn', '07bf9.info', 'g5nkxw.cn', '5551ss.com', 'cdqing.com', 'mkxszc51.cn', 'rongzuwang.com', 'dongfang1.com', '18lb.com', 'rd35.net', 'cslejie.com', 'uehtpby.ml', 'sdlnmza.ml', 'c15chuanqisf.us', '0vz28rltp.cc', 'ybus.cn', 'sddzsoft.com', '018obw6tx.com', 'bj123.com', 'fmtch.cn', 'fhyh.tw', 'zhldphow.top', 'mqrz.tw', 'vluld.cn', 'qihe.tw', 'vbec.tw', 'cebk.tw', 'pdxe.tw', 'riqpma.loan', 'snwfbqlb.top', 'bbhyfl.loan', 'cfsxhj.loan', 'lzrqd.com', 'bet-hgw.com', 'bjecgc.com', 'dolbyaxon.com.cn', 'tbleo.com', 'jianxinls.com.cn', 'wiplan.com.cn', 'cicgz.com', 'dianying20.com', 'bandehao.com', 'xugr.cc', 'jtdahe.com', 'd72chuanqisf.us', 'y7zp8nn.com', '693718.com.cn', 'gesxb.tw', 'pukgu.tw', 'iubqr.cn', 'zjyongu.com', 'jvub.tw', 'mnwd.tw', 'wdax.tw', 'hb-cy.cn', 'nicozf.com', 'ahjhhy.com', 'ssxylc-374.biz', 'sjfns.cn', 'lbk218.cn', 'sdzx.cc', 'yunhong-transport.com', 'gongfu258.com', 'xiaoshuo73.com', 'hongjuren.com.cn', 'mghv.cc', 'stamfordbridals.com', 'sdfb56sdfb.com', 'whiteshopbetrayjp.com', 'nhfcyy.com', 'romon678.com', 'cpmaw.com', 'hdgzc.tw', 'dooso.ml', 'tydd10.tw', 'jdiy.tw', 'ioulus.top', 'fctfb.info', 'sinoof.com', 'ffobiz.cn', 'linseo.net', 'slv-sh.com', 'grnhh.com', 'uhhym.cn', 'sdf65g4s6df5g4.com', 'ea842h8n.com', 'hfdongyi.com', 'zjksms.com', '12tyty.com', 'eilz.tw', 'bjzgchina.com', 'jr1601.cn', 'kgqf.tw', 'bzvph.cn', 'eprmedianews.com', 'iridianmedia.com', 'iwwu.tw', 'brnwsm.loan', 'mnnmsb.loan', 'snpzdaaoa.top', 'govbsf.loan', 'x9lrvbpp7.cn', 'wwwchuaqu.com', 'xiubt.net', 'chinawsjx.com', 'hbgjylc-320.biz', 'hongshenglin.com.cn', '545028.com', 'bjwlxy.org', 'tounie.com', 'w5d76.com', 'd66chuanqisf.us', 'rigaogroup.com', 'szqylt.com', 'ibaidu11v.com', 'xiaoso.net', 'dychaoshi.com', 'jhlnsb.com', 'xkgp43g.com.cn', '26933.com', 'pyip.tw', 'ymjy001.com', 'kyrkb.cn', 'ivefa.cn', 'pgujn.cn', 'mvhp.tw', 'xvjs.tw', 'rtrtpz.top', 'naibqf.top', 'dcfgry.loan', 'jbvke.tw', 'txgslj.loan', '61mvay.cn', 'vkedm.com', '591feel.com', 'ptlchina.com.cn', 'mcyv.cc', 'hn38hn.com', 'hstxjx.com', 'oej6.com', 'dgsenvshui.com', '188ts.com', 'djbmb.loan', 'ysvuglcdi.top', 'yxf165274.com', 'ahyldjc.com', 'gzwenchaolin.com', 'perfect-member-offers.com', 'liujianstudio.cn', 'shurus.com', 'syhxzl.com', 'cnzdgt.com', 'scdirectory.cn', 'x-wodi.info', 'lt2100.com', 'nongfudaohang-info.tk', 'fufurenti.tk', '97gan-qvod.com', 'nvyoupaotu.tk', 'luanlunmeifu.tk', 'gan97.tk', 'gao3p.tk', '360rentiyishu.tk', 'gavaa.tk', '91779.com', 'hanguoqingse.tk', 'caobitu.tk', '525scom.tk', 'bt-chengren.tk', 'whcdwx.com', 'hao356.tk', 'avxunlei.tk', 'bbs356-bbs.com', 'caoxiaoyizi.tk', 'rentixingai.com', 'huangsexiaoshuo-book.info', 'xunlei-rufang.tk', 'oumei-yindao.tk', 'chaxuemeitu.tk', '668sscom.tk', 'ribenxiezhen.tk', 'scddphar.com', 'jenpengmei.tk', '20bobo.tk', 'wuyuerenti.tk', 'yunvxinjing.tk', 'damenhuashi.com', 'avbtcom.tk', 'av-3gp.tk', 'cntigerth.com', 'avxxx.tk', 'shangxinjqing.com', '38rentiyishu.com', 'bainenrenti.tk', 'sm-xingai.tk', 'meinv-tupian.tk', '129999.com', '17166.org', 'lunwen8.top', 'aaat.top', 'dtfkyy.com', 'huaron.xyz', 'xinpengkuangye.com', 'fyg80.com', 'sem808.com', '6ig8su.com', 'butiemiao.top', 'nanjingyuecai.com', 'njkyh.com', 'eabe3.cn', 'jnwszx.com', 'hint.tw', 'lgul2.tw', 'xbyingxiao.com', 'cenggjv.top', '77cx.cn', 'neeb7bd.info', 'luckyteener.net', 'lkhaql.cn', 'njrunyou.com', 'ganchuangzao.com', 'xinyan816.net', 'rdidk.cn', 'nanhaige-hotel.com', '30steel.com', 'bjkesy.com', 'szbfthg.com', 'wzjkfm.com.cn', 'hogry.cn', 'meinv500.com', 'dahai520.com', 'maxsucai.com', 'cdhmk.com', 'obngs.com', 'hdzgx.com', 'p0e6ctpa.com', 'styr-02.tk', 'bbxq.co.cc', 'oh67.com')", "");
+                DataTable dta = MySQLHelper.Query(sql).Tables[0];
+                List<authorities> aList = DtToList<authorities>.ConvertToModel(dta);
+                foreach (authorities a in aList)
+                {
+                    string rrcol = Utility.StringHelper.CalculateMD5Hash(a.zone + ".").Substring(0, 1).ToLower();
+                    int idx = Int32.Parse(rrcol, System.Globalization.NumberStyles.HexNumber);
+                    dla[idx].Add(Row2Authorities(a));
+                }
+                foreach (string c in collection)
+                {
+                    var idx = Int32.Parse(c, System.Globalization.NumberStyles.HexNumber);
+                    if (dla[idx].Count > 0)
+                    {
+                        IMongoCollection<AuthoritiesSimple> categoriesA = db.GetCollection<AuthoritiesSimple>(c);
+                        List<string> zonelist = new List<string>();
+                        foreach (AuthoritiesSimple aus in dla[idx])
+                        {
+                            zonelist.Add(aus.domain);
+                        }
+                        categoriesA.DeleteMany(Builders<AuthoritiesSimple>.Filter.And(Builders<AuthoritiesSimple>.Filter.In("domain", zonelist), Builders<AuthoritiesSimple>.Filter.Lt("rid", 0)));
+                        categoriesA.InsertMany(dla[idx]);
+                    }
+                }
+                    Console.WriteLine("end");
+            }
+            catch (Exception ex)
+            {
+                string msg = ex.ToString();
+            }
+        }
         static AuthoritiesSimple Row2Authorities(authorities dr)
         {
                 AuthoritiesSimple d = new AuthoritiesSimple();
@@ -374,7 +421,9 @@ namespace ProcessRecords
             return dl;
         }
 
-
+        /// <summary>
+        /// zones表分16片查询，然后每片每100条查询,如果确实，从mysql刷新之MongoDB
+        /// </summary>
         static void RefreshSOANS()
         {
             System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
@@ -437,6 +486,60 @@ namespace ProcessRecords
                 string msg = ex.ToString();
                 Console.WriteLine(msg);
                 LoggerAdvance.AddLog(msg, "RefreshSOANSException", "");
+            }
+        }
+        static void CheckSOANS()
+        {
+            System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
+            watch.Start();//开始计时 
+            string[] collection = new string[] {  "f" };//"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e",
+            try
+            {
+                var client = DriverConfiguration.Client;
+                var db = client.GetDatabase(DriverConfiguration.DatabaseNamespace.DatabaseName);
+                IMongoCollection<ZonesSimple> categoriesZ = db.GetCollection<ZonesSimple>("zones");
+                foreach (string c in collection)
+                {
+                    IMongoCollection<AuthoritiesSimple> categoriesA = db.GetCollection<AuthoritiesSimple>(c);
+                    List<ZonesSimple> zoneslist = categoriesZ.Find(Builders<ZonesSimple>.Filter.Eq("rrcol", c)).ToList<ZonesSimple>();
+                    Console.WriteLine(c + " collection count= " + zoneslist.Count);
+                    List<string> zoneList = new List<string>();
+                    int needProcess = 0;
+                    for (int i = 0; i < zoneslist.Count; i++)
+                    {
+                        if (zoneslist[i].domain == zoneslist[i].rdomain) 
+                            zoneList.Add(zoneslist[i].domain);
+                        if (zoneList.Count==100 || i == zoneslist.Count - 1)
+                        {
+                            var filterA = Builders<AuthoritiesSimple>.Filter;
+                            var builderA = filterA.And(filterA.In("domain", zoneList), filterA.Eq("type", "SOA"));
+                            List<AuthoritiesSimple> alist = categoriesA.Find(builderA).ToList<AuthoritiesSimple>();
+                            foreach (string zone in zoneList)
+                            {
+                                int count = alist.FindAll(a => a.domain == zone).Count();
+                                if (count == 0)
+                                {
+                                    LoggerAdvance.AddLog("collection = " + c + "  domain= " + zone + "  has no SOANS", "CheckSOANS", "");
+                                    needProcess++;
+                                }
+                                else if(count>1)
+                                    LoggerAdvance.AddLog("collection = " + c + "  domain= " +zone + " has many SOA", "CheckSOANS", "");
+                            }
+                            zoneList.Clear();
+                        }
+                        if (i > 0 && i % 1000 == 0)
+                        {
+                            Console.WriteLine(c + " collection processing " + needProcess + " idx= " + i + " use time" + watch.ElapsedMilliseconds);
+                        }
+                    }
+                    Console.WriteLine(c + " collection processed use time" + watch.ElapsedMilliseconds);
+                }
+            }
+            catch (Exception ex)
+            {
+                string msg = ex.ToString();
+                Console.WriteLine(msg);
+                LoggerAdvance.AddLog(msg, "CheckSOANSException", "");
             }
         }
 
@@ -640,10 +743,10 @@ namespace ProcessRecords
                 d.rdata = dr.data.ToString().Replace("\"", string.Empty);
             else
                 d.rdata = dr.data.ToString();
-            d.ttl = Convert.ToInt32(dr.ttl);
+            d.ttl = dr.ttl;
             d.view = dr.view.ToString();
             d.userid = Convert.ToInt32(dr.userid);
-            d.is_stop = dr.active;
+            d.is_stop = dr.active=="Y"?"N":"Y";
             return d;
         }
         static List<DnsRecordsSimple> Row2DnsRecords(List<dnsrecords> drlist)
@@ -872,7 +975,7 @@ namespace ProcessRecords
         }
         static void UpdateLoadOnStart()
         {
-            string sql = @"select zone from zones where DomainLevel>0;";
+            string sql = @"SELECT Zone from zones where DomainLevel>0 and Active='Y' and ForceStop='N';";
             DataSet ds = MySQLHelper.Query(sql);
             Console.WriteLine("get data " + ds.Tables[0].Rows.Count);
             var client = DriverConfiguration.Client;
@@ -888,7 +991,7 @@ namespace ProcessRecords
             {
                 zonelist.Add(dr["zone"].ToString() + ".");
                 count++;
-                if ((count > 0 && count % 100 == 0) || count == dt.Rows.Count)
+                if (zonelist.Count == 100 || count == dt.Rows.Count)
                 {
                     var builder = Builders<ZonesSimple>.Filter;
                     var filter = builder.In("domain", zonelist);
@@ -1060,7 +1163,70 @@ namespace ProcessRecords
             watch.Stop();//停止计时
         }
 
+        static void ReloadAllRecords() {
+            
+                DataTable dtid = MySQLHelper.Query("select min(id),max(id) from dnsrecords").Tables[0];
+                long min = Convert.ToInt32(dtid.Rows[0][0]);
+                long max = Convert.ToInt32(dtid.Rows[0][1]);
 
+                System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
+                watch.Start();//开始计时  
+                long index = 6460311;
+                do
+                {
+                    DataTable dt = MySQLHelper.Query("select d.id,d.zoneid,d.zone,d.host,d.type,d.data,d.ttl,d.view,d.mx_priority,d.userid,d.active from dnsrecords as d where d.type<>'PTR' and d.id BETWEEN " + (index-1000) + " and " + index + " order by d.zone").Tables[0];
+                    Console.WriteLine("GetDataTabel from mysql         Use Time={0};", watch.ElapsedMilliseconds);
+                    List<dnsrecords> rListtemp = DtToList<dnsrecords>.ConvertToModel(dt);
+                   
+                    List<dnsrecords> unList = new List<dnsrecords>();
+                    List<DnsRecordsSimple>[] dla = new List<DnsRecordsSimple>[16] { new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>(), new List<DnsRecordsSimple>() };
+
+                    foreach (dnsrecords dr in rListtemp)
+                    {
+                        string collectionname = StringHelper.CalculateMD5Hash(dr.zone+".").ToLower().Substring(0, 1);
+                        if (CheckRecordHost(dr.host, dr.type) && CheckRecordData(dr.data, dr.type, dr.view, dr.host))
+                        {
+                            DnsRecordsSimple d = Row2DnsRecord(dr);
+                            int idx = Int32.Parse(collectionname, System.Globalization.NumberStyles.HexNumber);
+                            dla[idx].Add(d);
+                        }
+                        else
+                        {
+                            LoggerAdvance.AddLog(string.Format( collectionname+" collection record " + dr.id + " is wrong"), "recordwrong", "");
+                        }
+                    }
+
+                    var client = DriverConfiguration.Client;
+                    var db = client.GetDatabase(DriverConfiguration.DatabaseNamespace.DatabaseName);
+                    try { 
+                        for (int i = 0; i < 16; i++)
+                        {
+                            if (dla[i].Count > 0)
+                            {
+                                IMongoCollection<DnsRecordsSimple> collection = db.GetCollection<DnsRecordsSimple>(i.ToString("x"));
+                                List<long> ridlist = new List<long>();
+                                foreach (DnsRecordsSimple ds in dla[i])
+                                {
+                                    ridlist.Add(ds.rid);
+                                }
+                                collection.DeleteMany(Builders<DnsRecordsSimple>.Filter.In("rid", ridlist));
+                                collection.InsertMany(dla[i]);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                    LoggerAdvance.AddLog(string.Format("min={0};max={1};index={2};", min, max, index), "Exception", "");
+                    Console.WriteLine("Error");
+                    }
+                    Thread.Sleep(1000);
+                    index = index - 1001;
+                    Console.WriteLine("min={0};max={1};index={2};use time {3}", min, max, index, watch.ElapsedMilliseconds);
+                    Console.WriteLine("==============================================");
+                } while (index >min-100);
+                Console.WriteLine("End min={0};max={1};index={2};use time {3}", min, max, index, watch.ElapsedMilliseconds);
+                watch.Stop();//停止计时
+        }
 
 
         /// <summary>
@@ -1282,8 +1448,6 @@ namespace ProcessRecords
         public string dzone { get; set; }
 
     }
-
-
     internal class zonecount
     {
         public string zone { get; set; }
