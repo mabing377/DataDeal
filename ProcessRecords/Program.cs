@@ -30,7 +30,7 @@ namespace ProcessRecords
             Console.WriteLine("7-RefreshRecordsN");
             Console.WriteLine("8-RefreshRDomain2");
             Console.WriteLine("9-UpdateLoadOnStart");
-            Console.WriteLine("0-ReloadAllRecords");
+            Console.WriteLine("0-Host2Lower");
             Console.Write("请输入对应的数字：");
             int input = Console.Read();
             //Console.WriteLine("你输入的是：" + input.ToString());
@@ -65,7 +65,7 @@ namespace ProcessRecords
                     UpdateLoadOnStart();
                     break;
                 case 48:
-                    ReloadAllRecords();
+                    Data2Lower();
                     break;
                 default:
                     break;
@@ -74,6 +74,70 @@ namespace ProcessRecords
             goto switchaction;
 
             Console.ReadKey();
+        }
+
+        static void Host2Lower() {
+            DataTable dtd = MySQLHelper.Query("select d.id,d.zoneid,d.zone,d.host,d.type,d.data,d.ttl,d.view,d.mx_priority,d.userid,d.active from dnsrecords as d WHERE Host REGEXP BINARY  '[A-Z]' and type in('AAAA','TXT');").Tables[0];
+            Console.WriteLine("dnsrecord count +" + dtd.Rows.Count);
+            
+            List<dnsrecords> recordList = DtToList<dnsrecords>.ConvertToModel(dtd);
+
+            System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
+            watch.Start();//开始计时 
+            var client = DriverConfiguration.Client;
+            var db = client.GetDatabase(DriverConfiguration.DatabaseNamespace.DatabaseName);
+            IMongoCollection<ZonesSimple> categoriesZ = db.GetCollection<ZonesSimple>("zones");
+            int count = 0;
+            foreach (dnsrecords d in recordList) {
+                string domain = d.zone + '.';
+                string rrcol = Utility.StringHelper.CalculateMD5Hash(domain).Substring(0, 1).ToLower();
+                IMongoCollection<DnsRecordsSimple> categoriesD = db.GetCollection<DnsRecordsSimple>(rrcol);
+
+                var builder = Builders<DnsRecordsSimple>.Filter;
+                var filter = builder.And(builder.Eq("domain", domain), builder.Eq("rid", d.id));
+                var update = Builders<DnsRecordsSimple>.Update.Set("name", d.host.ToLower());
+                categoriesD.UpdateMany(filter, update);
+                count++;
+                if (count % 100 == 0)
+                    Console.WriteLine(count+" time "+watch.ElapsedMilliseconds);
+            }
+;           Console.WriteLine("end");
+                
+        }
+
+        static void Data2Lower()
+        {
+            DataTable dtd = MySQLHelper.Query("select d.id,d.zoneid,d.zone,d.host,d.type,d.data,d.ttl,d.view,d.mx_priority,d.userid,d.active from dnsrecords as d WHERE `Data` REGEXP BINARY  '[A-Z]';").Tables[0];
+            Console.WriteLine("dnsrecord count +" + dtd.Rows.Count);
+
+            List<dnsrecords> recordList = DtToList<dnsrecords>.ConvertToModel(dtd);
+
+            System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
+            watch.Start();//开始计时 
+            var client = DriverConfiguration.Client;
+            var db = client.GetDatabase(DriverConfiguration.DatabaseNamespace.DatabaseName);
+            IMongoCollection<ZonesSimple> categoriesZ = db.GetCollection<ZonesSimple>("zones");
+            int count = 0;
+            foreach (dnsrecords d in recordList)
+            {
+                string domain = d.zone + '.';
+                string rrcol = Utility.StringHelper.CalculateMD5Hash(domain).Substring(0, 1).ToLower();
+                IMongoCollection<DnsRecordsSimple> categoriesD = db.GetCollection<DnsRecordsSimple>(rrcol);
+
+                var builder = Builders<DnsRecordsSimple>.Filter;
+                var filter = builder.And(builder.Eq("domain", domain), builder.Eq("rid", d.id));
+                var update = Builders<DnsRecordsSimple>.Update.Set("rdata", d.data.ToLower());
+                if (d.type == "TXT" || d.type == "AAAA")
+                    update = Builders<DnsRecordsSimple>.Update.Set("rdata", d.data);
+                if (d.type == "MX" )
+                    update = Builders<DnsRecordsSimple>.Update.Set("rdata", d.mx_priority + " " + d.data);
+                categoriesD.UpdateMany(filter, update);
+                count++;
+                if (count % 100 == 0)
+                    Console.WriteLine(count + " time " + watch.ElapsedMilliseconds);
+            }
+; Console.WriteLine("end");
+
         }
         static void DoAction(string path)
         {
@@ -1042,7 +1106,6 @@ namespace ProcessRecords
                 domainlist.Clear();
             }
             Console.WriteLine("end");
-
         }
 
         static void ReloadZones()
