@@ -70,6 +70,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Models\Models.csproj">
+      <Project>{cecc783e-ff14-46ec-8fa5-7e2e4901be79}</Project>
+      <Name>Models</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MongoDBHelper\MongoDBHelper.csproj">
       <Project>{B14C6C51-3539-42BB-868C-F1AB8884DE3D}</Project>
       <Name>MongoDBHelper</Name>

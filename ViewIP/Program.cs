@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using Utility;
+using Models;
 
 namespace ViewIP
 {
@@ -31,7 +31,7 @@ namespace ViewIP
                     string content;
                     string view = "";
                     StreamReader sr = new StreamReader(file, Encoding.Default);
-                    List<ViewIP> dl = new List<ViewIP>();
+                    List<Models.ViewIP> dl = new List<Models.ViewIP>();
                     var client = DriverConfiguration.Client;
                     var db = client.GetDatabase(DriverConfiguration.DatabaseNamespace.DatabaseName);
                     while ((content = sr.ReadLine()) != null)
@@ -52,10 +52,10 @@ namespace ViewIP
                             long maxIp = IpToInt(eip);
                             if (level == 1 && view == "TelDef")
                             {
-                                var builder = Builders<ViewIP>.Filter;
-                                long dcount = db.GetCollection<ViewIP>("levelIp").Find(builder.And(builder.Eq("start", minIp), builder.Eq("end", maxIp), builder.Eq("view", view))).ToList<ViewIP>().Count;// MongoHelper.GetCount<ViewIP>("zonesip", new Document("start", minIp).Add("end", maxIp).Add("view", view));
+                                var builder = Builders<Models.ViewIP>.Filter;
+                                long dcount = db.GetCollection<Models.ViewIP>("levelIp").Find(builder.And(builder.Eq("start", minIp), builder.Eq("end", maxIp), builder.Eq("view", view))).ToList<Models.ViewIP>().Count;// MongoHelper.GetCount<ViewIP>("zonesip", new Document("start", minIp).Add("end", maxIp).Add("view", view));
                                 if (dcount == 0) {
-                                    ViewIP v = new ViewIP();
+                                    Models.ViewIP v = new Models.ViewIP();
                                     v.start = minIp;
                                     v.end = maxIp;
                                     v.view = view;
@@ -65,7 +65,7 @@ namespace ViewIP
                             }
                             else
                             {
-                                ViewIP v = new ViewIP();
+                                Models.ViewIP v = new Models.ViewIP();
                                 v.start = minIp;
                                 v.end = maxIp;
                                 v.view = view;
@@ -76,7 +76,7 @@ namespace ViewIP
                     }
                     if (dl.Count > 0)
                     {
-                        db.GetCollection<ViewIP>("levelIp").InsertMany(dl);
+                        db.GetCollection<Models.ViewIP>("levelIp").InsertMany(dl);
                         Console.WriteLine(view + " Handled Complete");
                         count++;
                     }
@@ -334,11 +334,5 @@ namespace ViewIP
         }
         
     }
-    internal class ViewIP
-    {
-        public long start { get; set; }
-        public long end { get; set; }
-        public string view { get; set; }
-        public int level { get; set; }
-    }
+
 }

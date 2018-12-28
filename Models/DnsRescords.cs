@@ -23,6 +23,7 @@ namespace Models
     }
     public class DnsRecordsSimple
     {
+        [Newtonsoft.Json.JsonIgnore()]
         public ObjectId _id { get; set; }
         public long rid { get; set; }
         public int userid { get; set; }

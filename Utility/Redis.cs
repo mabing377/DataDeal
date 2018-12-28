@@ -66,7 +66,10 @@ namespace Utility
         {
             _base = baseDB;
         }
-
+        public IBatch CreateBatch()
+        {
+            return _base.CreateBatch();
+        }
         /// <summary>
         /// 指定某个键的过期时间
         /// </summary>

@@ -36,7 +36,7 @@ namespace Online
             switch (input)
             {
                 case 49:
-                    MongoInsertFromZones();
+                    MongoInsertFromZones2();
                     break;
                 case 50:
                     MongoInsertFromAuthorities();
@@ -117,6 +117,42 @@ namespace Online
                     Console.WriteLine("==============================================");
                 } while (index < max);
                 Console.WriteLine("End min={0};max={1};index={2};use time {3}", min, max, index, watch.ElapsedMilliseconds);
+                watch.Stop();//停止计时
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+        static void MongoInsertFromZones2()
+        {
+            try
+            {
+                System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
+                watch.Start();//开始计时  
+                DataTable dt = MySQLHelper.Query("SELECT * from zones where userid=424920").Tables[0];
+                Console.WriteLine("GetDataTabel from mysql         Use Time={0};", watch.ElapsedMilliseconds);
+
+                List<Zones> zonesList = DtToList<Zones>.ConvertToModel(dt);
+                Console.WriteLine("DataTable Convert to ModelList; Use time={0};", watch.ElapsedMilliseconds);
+                  
+                var client = DriverConfiguration.Client;
+                var db = client.GetDatabase(DriverConfiguration.DatabaseNamespace.DatabaseName);
+                IMongoCollection<Zones> categories = db.GetCollection<Zones>("ZonesEntirety");
+
+                foreach (Zones z in zonesList) {
+                    z._id= Utility.StringHelper.CalculateMD5Hash(z.Zone).ToLower();
+                }
+                try
+                {
+                    categories.InsertMany(zonesList);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+                Console.WriteLine("MongoDB Inserted;               Use time={0};", watch.ElapsedMilliseconds);
+                
                 watch.Stop();//停止计时
             }
             catch (Exception ex)

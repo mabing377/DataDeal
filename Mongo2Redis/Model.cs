@@ -147,5 +147,23 @@ namespace Mongo2Redis
             }
             return t;
         }
+
+        public static List<string> GetFromSet(RedisValue[] redisValues)
+        {
+            List<string> entryList = new List<string>();
+            foreach (RedisValue v in redisValues)
+            {
+                entryList.Add(v);
+            }
+            return entryList;
+        }
+        public static RedisValue[] GetFromList(List<string> listString)
+        {
+            var valueList = new List<RedisValue>();
+            listString.ForEach(add => {
+                valueList.Add(add);
+            });
+            return valueList.ToArray();
+        }
     }
 }
