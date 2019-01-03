@@ -78,10 +78,6 @@
       <Project>{B14C6C51-3539-42BB-868C-F1AB8884DE3D}</Project>
       <Name>MongoDBHelper</Name>
     </ProjectReference>
-    <ProjectReference Include="..\MongoDB\MongoDB.csproj">
-      <Project>{B125BBA6-BFFD-44FA-9254-9B1754CD8AF3}</Project>
-      <Name>MongoDB</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Utility\Utility.csproj">
       <Project>{156f5287-2f78-4750-8b48-66fef6e73941}</Project>
       <Name>Utility</Name>

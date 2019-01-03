@@ -47,12 +47,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AuthEntity.cs" />
     <Compile Include="Authorities.cs" />
     <Compile Include="DnsRescords.cs" />
+    <Compile Include="RecordEntity.cs" />
     <Compile Include="ViewEnum.cs" />
     <Compile Include="ViewIP.cs" />
     <Compile Include="Zones.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ZonesEntity.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -369,7 +369,7 @@ namespace Online
             d.ttl = Convert.ToInt32(dr.ttl);
             d.view = dr.view.ToString();
             d.userid = Convert.ToInt32(dr.userid);
-            d.is_stop = dr.active;
+            d.is_stop = dr.active=="Y"?"N":"Y";
             return d;
         }
 

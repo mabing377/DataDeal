@@ -266,14 +266,15 @@ namespace Mongo2Redis
             var db = client.GetDatabase(DriverConfiguration.DatabaseNamespace.DatabaseName);
            
             IMongoCollection<ViewIP> categories = db.GetCollection<ViewIP>("levelIp");
-            List<ViewIP> list = categories.Find(Builders<ViewIP>.Filter.Empty).ToList<ViewIP>();
+            List<ViewIP> list = categories.Find(Builders<ViewIP>.Filter.Empty).SortBy(v=>v.start).ToList<ViewIP>();
             int count = 0;
             watch.Start();
             List<ViewSet> vslist = new List<ViewSet>();
             foreach (ViewIP v in list)
             {
+                //Redis.DB(0).SetAdd(v.level.ToString(), JsonConvert.SerializeObject(v));
                 ViewSet vs = new ViewSet();
-                vs.Key = v.level.ToString();                
+                vs.Key = v.level.ToString();
                 vs.RedisValue = JsonConvert.SerializeObject(v);
                 vslist.Add(vs);
                 count++;
@@ -282,7 +283,8 @@ namespace Mongo2Redis
                     var batch = Redis.DB(0).CreateBatch();
                     foreach (var item in vslist)
                     {
-                        batch.SetAddAsync(item.Key, item.RedisValue);
+                        //batch.SortedSetAddAsync(item.Key, item.RedisValue,JsonConvert.DeserializeObject<ViewIP>(item.RedisValue).start);
+                        batch.ListRightPushAsync(item.Key, item.RedisValue);
                     }
                     batch.Execute();
                     vslist.Clear();
