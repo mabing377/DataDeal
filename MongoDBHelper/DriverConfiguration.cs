@@ -15,7 +15,7 @@ namespace BindDns.MongoDBEntity
         // static constructor
         static DriverConfiguration()
         {
-            __client = new Lazy<MongoClient>(() => new MongoClient(GetClientSettings()), true);
+            __client = new Lazy<MongoClient>(() => new MongoClient(GetClientSettings(string.Empty)), true);
             __databaseNamespace = CoreConfiguration.DatabaseNamespace;
             __collectionNamespace = new CollectionNamespace(__databaseNamespace, "testcollection");
         }
@@ -76,9 +76,9 @@ namespace BindDns.MongoDBEntity
             return CreateDisposableClient((ClusterBuilder c) => c.Subscribe(capturer));
         }
 
-        public static MongoClientSettings GetClientSettings()
+        public static MongoClientSettings GetClientSettings(string connStr)
         {
-            var connectionString = CoreConfiguration.ConnectionString.ToString();
+            var connectionString =string.IsNullOrEmpty(connStr)? CoreConfiguration.ConnectionString.ToString(): connStr;
             var clientSettings = MongoClientSettings.FromUrl(new MongoUrl(connectionString));
 
             var serverSelectionTimeoutString = Environment.GetEnvironmentVariable("MONGO_SERVER_SELECTION_TIMEOUT_MS");

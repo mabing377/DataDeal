@@ -21,6 +21,10 @@ namespace ViewIP
             Console.ReadKey();
             return 1;
         }
+
+
+
+
         static void DoAction(string path,int level) {
             try
             {

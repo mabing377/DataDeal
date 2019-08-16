@@ -38,6 +38,7 @@ namespace Mongo2Redis
             Console.WriteLine("5-Transfer Authorities&Records8-b");
             Console.WriteLine("6-Transfer Authorities&Recordsc-f");
             Console.WriteLine("7-Transfer levelip");
+            Console.WriteLine("8-Update levelip");
 
             Console.Write("请输入对应的数字：");
             int input = Console.Read();
@@ -67,9 +68,13 @@ namespace Mongo2Redis
                 case 55:
                     DealView();
                     break;
+                case 56:
+                    RefreshView();
+                    break;
                 default:
                     break;
             }
+            Console.WriteLine("Mission Complete");
             input = Console.Read();
             goto switchaction;
         }
@@ -258,6 +263,64 @@ namespace Mongo2Redis
                 watch.Stop();
             }
         }
+
+        static void RefreshView() {
+            System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
+
+            var client = DriverConfiguration.Client;            
+            var db = client.GetDatabase(DriverConfiguration.DatabaseNamespace.DatabaseName);
+
+            IMongoCollection<ViewIP> categories = db.GetCollection<ViewIP>("levelIp");
+            List<ViewIP> list = categories.Find(Builders<ViewIP>.Filter.Eq("view", "BaiSpi")).ToList<ViewIP>();
+
+            var newMongoClientSettings = DriverConfiguration.GetClientSettings("mongodb://192.168.30.144:27017");
+            var newClent = new MongoClient(newMongoClientSettings);
+            var newDB = newClent.GetDatabase("network");
+            IMongoCollection<NewViewIPData> newCategories = newDB.GetCollection<NewViewIPData>("levelip");
+            List<NewViewIPData> newlist = newCategories.Find(Builders<NewViewIPData>.Filter.Empty).ToList<NewViewIPData>();
+
+
+
+            IMongoCollection<ViewIP> newCategories2 = db.GetCollection<ViewIP>("baispi");
+            List<ViewIP> vslist = new List<ViewIP>();
+
+            foreach (NewViewIPData nv in newlist)
+            {
+                ViewIP tempV = new ViewIP();
+                tempV.start = Convert.ToInt64(nv.start);
+                tempV.end = Convert.ToInt64(nv.end);
+                tempV.view = "BaiSpi";
+                tempV.level = 0;
+                vslist.Add(tempV);
+                //bool isMixed = false;
+                //foreach (ViewIP v in list)
+                //{
+                //    if (Convert.ToInt64(nv.start) >= v.start && Convert.ToInt64(nv.start) <= v.end)
+                //    {
+                //        tempV = v;
+                //        isMixed = true;
+                //    }
+                //    else if (Convert.ToInt64(nv.end) >= v.start && Convert.ToInt64(nv.end) <= v.end)
+                //    {
+                //        tempV = v;
+                //        isMixed = true;
+                //    }
+                //}
+                //if (isMixed)//有交集  更新
+                //{
+                //    Console.WriteLine(nv.network + " mixed");
+                //}
+                //else
+                //{//无交集  添加
+                //    Console.WriteLine(nv.network + " not mixed");
+
+                //}
+            }
+            Console.WriteLine(vslist.Count);
+            categories.InsertMany(vslist);
+            watch.Stop();
+        }
+
         static void DealView()
         {
             System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
@@ -267,6 +330,10 @@ namespace Mongo2Redis
            
             IMongoCollection<ViewIP> categories = db.GetCollection<ViewIP>("levelIp");
             List<ViewIP> list = categories.Find(Builders<ViewIP>.Filter.Empty).SortBy(v=>v.start).ToList<ViewIP>();
+
+            Redis.DB(0).KeyDelete("0");
+            Redis.DB(0).KeyDelete("1");
+
             int count = 0;
             watch.Start();
             List<ViewSet> vslist = new List<ViewSet>();

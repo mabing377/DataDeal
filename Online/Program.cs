@@ -622,7 +622,7 @@ namespace Online
             List< zones> zonesList= DtToList<zones>.ConvertToModel(dt);
             int deleteCount = 0;
             IList<string> zoneArry = new List<string>();
-            foreach (zones z in zonesList)            {
+            foreach (zones z in zonesList){
                 zoneArry.Add(z.zone + ".");
 
                 ZonesSimple zs = Row2ZoneSimple(z);
